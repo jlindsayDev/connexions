@@ -3,9 +3,13 @@
     "module": "index.ts",
     "type": "module",
     "private": true,
+    "scripts": {
+        "dev": "bunx --bun vite"
+    },
     "devDependencies": {
         "@biomejs/biome": "beta",
-        "@types/bun": "latest"
+        "@types/bun": "latest",
+        "vite": "^6.3.5"
     },
     "peerDependencies": {
         "typescript": "^5.8.3"
