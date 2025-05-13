@@ -1,21 +1,7 @@
 # connexions
 
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.2.13. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
-
-
 Typical `honox` project structure ([link](https://github.com/honojs/honox#project-structure))
+
 ```
 .
 ├── app
@@ -57,3 +43,7 @@ client side ([link](https://github.com/honojs/honox#get-started---with-client))
 ├── tsconfig.json
 └── vite.config.ts
 ```
+
+Using Biome as linter/formatter
+
+Using Preact as Renderer
