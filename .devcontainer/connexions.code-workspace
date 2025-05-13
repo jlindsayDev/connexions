@@ -11,7 +11,10 @@
             "source.organizeImports": "explicit",
             "source.biome": "explicit",
             "source.fixAll.biome": "explicit"
-        }
+        },
+        "workbench.externalBrowser": "/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox",
+        "explorer.excludeGitIgnore": true,
+        "editor.formatOnSave": true
     },
     "extensions": {
         "recommendations": [
