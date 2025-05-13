@@ -1,16 +1,17 @@
 {
-  "name": "connexions",
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "hono": "^4.7.9",
-    "honox": "^0.1.40"
-  }
+    "name": "connexions",
+    "module": "index.ts",
+    "type": "module",
+    "private": true,
+    "devDependencies": {
+        "@biomejs/biome": "beta",
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5.8.3"
+    },
+    "dependencies": {
+        "hono": "latest",
+        "honox": "latest"
+    }
 }
