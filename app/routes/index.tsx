@@ -7,7 +7,7 @@ export const POST = createRoute(async (c) => {
     return c.redirect("/");
 });
 
-export default createRoute((c) => {
+export const GET = createRoute((c) => {
     const name = getCookie(c, "name") ?? "no name";
     return c.render(
         <div>
@@ -19,3 +19,5 @@ export default createRoute((c) => {
         </div>,
     );
 });
+
+export default GET;
