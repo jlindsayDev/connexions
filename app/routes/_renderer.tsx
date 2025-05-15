@@ -1,4 +1,3 @@
-// app/routes/_renderer.tsx
 import { jsxRenderer } from "hono/jsx-renderer";
 import { Link, Script } from "honox/server";
 
