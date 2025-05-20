@@ -1,5 +1,4 @@
 import { useState } from "hono/jsx";
-import "./calendar.css";
 
 export function Calendar({ startDate = new Date() }) {
     const [currentDate, setCurrentDate] = useState(startDate);
@@ -19,13 +18,13 @@ export function Calendar({ startDate = new Date() }) {
     };
 
     const createDayTile = (day: number) => {
-        const date = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`;
+        const monthStr = (currentDate.getMonth() + 1)
+            .toString()
+            .padStart(2, "0");
+        const dayStr = day.toString().padStart(2, "0");
+        const date = `${currentDate.getFullYear()}-${monthStr}-${dayStr}`;
         return (
-            <a
-                href={`/puzzle/${currentDate.getFullYear()}/${currentDate.getMonth()}/${day}`}
-                key={date}
-                class="day"
-            >
+            <a href={`puzzle/${date}`} key={date} class="day">
                 {day}
             </a>
         );
