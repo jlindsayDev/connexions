@@ -1,7 +1,7 @@
 import { jsxRenderer } from "hono/jsx-renderer";
 import { Link, Script } from "honox/server";
 
-export default jsxRenderer(({ children, title }) => {
+export default jsxRenderer(({ children }) => {
     return (
         <html lang="en">
             <head>
@@ -12,7 +12,6 @@ export default jsxRenderer(({ children, title }) => {
                 />
                 <Link href="/app/style.css" rel="stylesheet" />
                 <Script src="/app/client.ts" />
-                {title ? <title>{title}</title> : <></>}
             </head>
             <body>{children}</body>
         </html>
