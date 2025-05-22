@@ -9,14 +9,33 @@ import Puzzle from "../../islands/Puzzle";
 export const GET = createRoute((c) => {
     const { date } = c.req.param<"/:date">();
 
+    const dateObj = new Date(date);
+    const prevDateStr = new Date(dateObj.setDate(dateObj.getDate() - 1))
+        .toISOString()
+        .substring(0, 10);
+    const nextDateStr = new Date(dateObj.setDate(dateObj.getDate() + 2))
+        .toISOString()
+        .substring(0, 10);
+
     const puzzle = findPuzzleByDate(DB, date);
     const cards = findCardsForPuzzle(DB, puzzle);
     const categories = findCategoriesForPuzzle(DB, puzzle);
 
     return c.render(
         <>
-            <h1>Puzzle {puzzle.id}</h1>
-            <h3>{puzzle.print_date}</h3>
+            <header>
+                <h1>Puzzle {puzzle.id}</h1>
+
+                <nav>
+                    <a href={`/puzzle/${prevDateStr}`} rel="prev">
+                        &larr;
+                    </a>
+                    <span>{puzzle.print_date}</span>
+                    <a href={`/puzzle/${nextDateStr}`} rel="next">
+                        &rarr;
+                    </a>
+                </nav>
+            </header>
 
             <form>
                 <Puzzle puzzle={puzzle} cards={cards} categories={categories} />
