@@ -1,3 +1,7 @@
+body {
+    text-align: center;
+}
+
 .calendar-container {
     display: flex;
     flex-direction: column;
@@ -33,10 +37,6 @@
     border: none;
 }
 
-header {
-    text-align: center;
-}
-
 nav {
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
@@ -59,20 +59,29 @@ nav {
     }
 }
 
-.card-container {
+.category-container {
+    gap: 8px;
     display: grid;
-    grid-template-columns: repeat(4, 20vw);
-    grid-template-rows: repeat(4, 20vw);
+    margin-bottom: 8px;
+}
+
+.card-container {
+    width: 100%;
+    display: grid;
     gap: 1vw;
+    justify-content: space-evenly;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .card {
     border: 1px dashed black;
+    padding: 3rem 0rem;
+    font-weight: bold;
+    font-size: 0.8rem;
+
     border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
     word-wrap: break-word;
     word-break: break-word;
+
+    transition: 250ms ease all;
 }
