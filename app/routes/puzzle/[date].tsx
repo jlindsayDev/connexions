@@ -23,24 +23,19 @@ export const GET = createRoute((c) => {
 
     return c.render(
         <>
-            <header>
-                <h1>Puzzle {puzzle.id}</h1>
+            <h1>Puzzle {puzzle.id}</h1>
 
-                <nav>
-                    <a href={`/puzzle/${prevDateStr}`} rel="prev">
-                        &larr;
-                    </a>
-                    <span>{puzzle.print_date}</span>
-                    <a href={`/puzzle/${nextDateStr}`} rel="next">
-                        &rarr;
-                    </a>
-                </nav>
-            </header>
+            <nav>
+                <a href={`/puzzle/${prevDateStr}`} rel="prev">
+                    &larr;
+                </a>
+                <span class="date">{puzzle.print_date}</span>
+                <a href={`/puzzle/${nextDateStr}`} rel="next">
+                    &rarr;
+                </a>
+            </nav>
 
-            <form>
-                <Puzzle puzzle={puzzle} cards={cards} categories={categories} />
-                <input type="button" value="submit" />
-            </form>
+            <Puzzle puzzle={puzzle} cards={cards} categories={categories} />
         </>,
     );
 });
