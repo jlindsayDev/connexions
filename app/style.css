@@ -85,3 +85,7 @@ nav {
 
     transition: 250ms ease all;
 }
+
+.selected {
+    background-color: blanchedalmond;
+}
