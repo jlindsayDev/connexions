@@ -40,5 +40,10 @@ export const findCategoriesForPuzzle = (
         throw `no categories for puzzle ${puzzle}`;
     }
 
-    return categories;
+    const encodedCategories = categories.map((c) => ({
+        ...c,
+        category: btoa(c.category),
+    }));
+
+    return encodedCategories;
 };

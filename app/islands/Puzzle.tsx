@@ -80,7 +80,7 @@ const Puzzle: FC<PuzzleProps> = ({
             <div class="category-container">
                 {guessedCategories.map((c, i) => (
                     <div class={`category-${c.difficulty}`} key={i}>
-                        <h4>{c.category}</h4>
+                        <h4>{atob(c.category)}</h4>
                         <h5>WORDS</h5>
                     </div>
                 ))}
