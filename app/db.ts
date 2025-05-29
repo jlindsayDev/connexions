@@ -24,7 +24,12 @@ export const findCardsForPuzzle = (db: Database, puzzle: Puzzle): Card[] => {
         throw `no cards for puzzle ${puzzle}`;
     }
 
-    return cards;
+    const encodedCards = cards.map((c) => ({
+        ...c,
+        content: btoa(c.content),
+    }));
+
+    return encodedCards;
 };
 
 export const findCategoriesForPuzzle = (

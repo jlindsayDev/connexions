@@ -97,7 +97,7 @@ const Puzzle: FC<PuzzleProps> = ({
                         }}
                         key={c.position}
                     >
-                        {c.content}
+                        {atob(c.content)}
                     </button>
                 ))}
             </div>
