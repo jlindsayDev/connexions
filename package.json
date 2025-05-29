@@ -15,6 +15,7 @@
         "typescript": "^5.8.3"
     },
     "dependencies": {
+        "dexie": "latest",
         "hono": "latest",
         "honox": "latest"
     }
