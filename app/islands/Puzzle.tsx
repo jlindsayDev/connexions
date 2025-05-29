@@ -1,37 +1,74 @@
-import { useState } from "hono/jsx";
-import type { JSX } from "hono/jsx/jsx-runtime";
-import type {
-    Card as CardType,
-    Category as CategoryType,
-    Puzzle as PuzzleType,
-} from "models";
-import Card from "./Card";
+import { type FC, type PropsWithChildren, useState } from "hono/jsx";
+import type { Card as CardType, Category as CategoryType } from "models";
 
 type PuzzleProps = {
-    puzzle: PuzzleType;
+    guesses: Set<number>[];
     cards: CardType[];
     categories: CategoryType[];
 };
 
-let selectedCards: Set<number> = new Set();
-let guessedCategories: CategoryType[] = [];
+let availableCards: CardType[];
+let guessedCategories: CategoryType[];
+let triedGuesses: Set<Set<number>>;
+const selectedCards: Set<number> = new Set();
 
-const toggleCard = (position: number) => {
-    if (!selectedCards.delete(position)) {
-        selectedCards.add(position);
-    }
-};
+const Puzzle: FC<PuzzleProps> = ({
+    children,
+    ...props
+}: PropsWithChildren<PuzzleProps>) => {
+    const [cards, setCards] = useState(props.cards);
+    const [_categories, setCategories] = useState(props.categories);
+    const [guesses, _setGuesses] = useState(props.guesses);
 
-const guessCategory = () => {
-    if (selectedCards.size != 4) {
-        console.log(selectedCards);
-        return;
-    }
-};
+    const tryGuess = (guess: Set<number>): boolean => {
+        if (guess.size != 4) {
+            return false;
+        }
 
-const Puzzle = (props: PuzzleProps): JSX.Element => {
-    const [cards, _setCards] = useState(props.cards);
-    const [_categories, _setCategories] = useState(props.categories);
+        if (!triedGuesses.add(guess)) {
+            return false;
+        }
+
+        const guessedCards = availableCards.filter((c) =>
+            guess.has(c.position),
+        );
+
+        const categoryId = guessedCards[0]?.category_id ?? -1;
+        if (!guessedCards.every((c) => c.category_id == categoryId)) {
+            return false;
+        }
+
+        availableCards = availableCards.filter((c) => !guess.has(c.position));
+
+        setCards((cards: CardType[]) =>
+            cards.filter((c) => !guess.has(c.position)),
+        );
+
+        selectedCards.clear();
+
+        setCategories((categories: CategoryType[]) =>
+            categories.filter((c) => c.id != categoryId),
+        );
+
+        return true;
+    };
+
+    const toggleCard = (position: number): boolean => {
+        if (selectedCards.has(position)) {
+            return selectedCards.delete(position);
+        }
+
+        if (selectedCards.size >= 4) {
+            return false;
+        }
+
+        return !!selectedCards.add(position);
+    };
+
+    guessedCategories = [];
+    availableCards = Array.from(cards);
+    triedGuesses = new Set();
+    guesses.forEach(tryGuess);
 
     return (
         <>
@@ -45,12 +82,22 @@ const Puzzle = (props: PuzzleProps): JSX.Element => {
             </div>
 
             <div class="card-container">
-                {cards.map((c, _i) => (
-                    <Card {...c} isSelected={false} toggleCard={toggleCard} />
+                {availableCards.map((c, _i) => (
+                    <button
+                        className={`card`}
+                        onClick={(e: MouseEvent) => {
+                            const target = e.target as HTMLButtonElement;
+                            target?.classList.toggle("selected");
+                            toggleCard(c.position);
+                        }}
+                        key={c.position}
+                    >
+                        {c.content}
+                    </button>
                 ))}
             </div>
 
-            <button type="button" onClick={guessCategory}>
+            <button type="button" onClick={(_e) => tryGuess(selectedCards)}>
                 Submit
             </button>
         </>

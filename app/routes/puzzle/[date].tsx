@@ -35,7 +35,7 @@ export const GET = createRoute((c) => {
                 </a>
             </nav>
 
-            <Puzzle puzzle={puzzle} cards={cards} categories={categories} />
+            <Puzzle guesses={[]} cards={cards} categories={categories} />
         </>,
     );
 });
