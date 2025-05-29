@@ -7,17 +7,17 @@ type PuzzleProps = {
     categories: CategoryType[];
 };
 
-let availableCards: CardType[];
-let guessedCategories: CategoryType[];
-let triedGuesses: Set<Set<number>>;
 const selectedCards: Set<number> = new Set();
+const guessedCategories: CategoryType[] = [];
+let availableCards: CardType[];
+let triedGuesses: Set<Set<number>>;
 
 const Puzzle: FC<PuzzleProps> = ({
     children,
     ...props
 }: PropsWithChildren<PuzzleProps>) => {
     const [cards, setCards] = useState(props.cards);
-    const [_categories, setCategories] = useState(props.categories);
+    const [categories, setCategories] = useState(props.categories);
     const [guesses, _setGuesses] = useState(props.guesses);
 
     const tryGuess = (guess: Set<number>): boolean => {
@@ -46,6 +46,12 @@ const Puzzle: FC<PuzzleProps> = ({
 
         selectedCards.clear();
 
+        const guessedCategory = categories.find((c) => c.id === categoryId);
+        if (!guessedCategory) {
+            return false;
+        }
+        guessedCategories.push(guessedCategory);
+
         setCategories((categories: CategoryType[]) =>
             categories.filter((c) => c.id != categoryId),
         );
@@ -65,7 +71,6 @@ const Puzzle: FC<PuzzleProps> = ({
         return !!selectedCards.add(position);
     };
 
-    guessedCategories = [];
     availableCards = Array.from(cards);
     triedGuesses = new Set();
     guesses.forEach(tryGuess);
