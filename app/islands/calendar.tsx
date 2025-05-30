@@ -1,6 +1,6 @@
 import { useState } from "hono/jsx";
 
-export function Calendar({ startDate = new Date() }) {
+const Calendar = ({ startDate = new Date() }) => {
     const [currentDate, setCurrentDate] = useState(startDate);
 
     const handlePrevMonth = () => {
@@ -73,4 +73,6 @@ export function Calendar({ startDate = new Date() }) {
             <div class="calendar-grid">{renderDays()}</div>
         </div>
     );
-}
+};
+
+export default Calendar;

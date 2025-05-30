@@ -1,5 +1,5 @@
 import { createRoute, DB } from "../../factory";
-import Puzzle from "../../islands/Puzzle";
+import Puzzle from "../../islands/puzzle";
 import {
     findCardsForPuzzle,
     findCategoriesForPuzzle,
