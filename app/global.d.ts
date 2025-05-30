@@ -1,14 +1,3 @@
-type Head = {
-    title?: string;
-};
-
-declare module "hono" {
-    type ContextRenderer = (
-        content: string | Promise<string>,
-        head?: Head,
-    ) => Response | Promise<Response>;
-}
-
 declare module "models" {
     export type Puzzle = {
         id: number;
