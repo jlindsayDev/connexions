@@ -1,7 +1,8 @@
-import { type FC, type PropsWithChildren, useState } from "hono/jsx";
+import { type FC, useState } from "hono/jsx";
 import type { Card as CardType, Category as CategoryType } from "models";
 
 type PuzzleProps = {
+    date: string;
     guesses: Set<number>[];
     cards: CardType[];
     categories: CategoryType[];
@@ -10,24 +11,22 @@ type PuzzleProps = {
 const selectedCards: Set<number> = new Set();
 const guessedCategories: CategoryType[] = [];
 let availableCards: CardType[];
-let triedGuesses: Set<Set<number>>;
+let triedGuesses: Set<number>[];
 
-const Puzzle: FC<PuzzleProps> = ({
-    children,
-    ...props
-}: PropsWithChildren<PuzzleProps>) => {
+const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => {
     const [cards, setCards] = useState(props.cards);
     const [categories, setCategories] = useState(props.categories);
-    const [guesses, _setGuesses] = useState(props.guesses);
+    const [_guesses, _setGuesses] = useState(props.guesses);
 
     const tryGuess = (guess: Set<number>): boolean => {
         if (guess.size != 4) {
             return false;
         }
 
-        if (!triedGuesses.add(guess)) {
+        if (!new Set(triedGuesses).add(guess)) {
             return false;
         }
+        triedGuesses.push(guess);
 
         const guessedCards = availableCards.filter((c) =>
             guess.has(c.position),
@@ -72,8 +71,12 @@ const Puzzle: FC<PuzzleProps> = ({
     };
 
     availableCards = Array.from(cards);
-    triedGuesses = new Set();
-    guesses.forEach(tryGuess);
+
+    const fetchedGuesses: string[] = [];
+    triedGuesses = fetchedGuesses.map(
+        (s) => new Set(s.split(",").map(parseInt)),
+    );
+    triedGuesses.forEach(tryGuess);
 
     return (
         <>
