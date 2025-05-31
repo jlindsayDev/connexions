@@ -1,3 +1,6 @@
+# jlindsaydev ignore
+.certificates
+
 # dependencies (bun install)
 node_modules
 
