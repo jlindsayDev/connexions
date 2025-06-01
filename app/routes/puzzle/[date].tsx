@@ -1,10 +1,10 @@
 import { createRoute, DB } from "../../factory";
-import Puzzle from "../../islands/puzzle";
 import {
     findCardsForPuzzle,
     findCategoriesForPuzzle,
     findPuzzleByDate,
-} from "../../sqlite_db";
+} from "../../features/sqlite_db";
+import Puzzle from "../../islands/puzzle";
 
 export const GET = createRoute((c) => {
     const { date } = c.req.param<"/:date">();
@@ -29,7 +29,9 @@ export const GET = createRoute((c) => {
                 <a href={`/puzzle/${prevDateStr}`} rel="prev">
                     &larr;
                 </a>
+
                 <span class="date">{puzzle.print_date}</span>
+
                 <a href={`/puzzle/${nextDateStr}`} rel="next">
                     &rarr;
                 </a>
