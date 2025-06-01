@@ -3,4 +3,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
     plugins: [honox()],
+    server: {
+        allowedHosts: ['musing-boyd.orb.local']
+  },
 });
