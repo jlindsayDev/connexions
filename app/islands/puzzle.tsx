@@ -74,7 +74,7 @@ const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => {
 
     const fetchedGuesses: string[] = [];
     triedGuesses = fetchedGuesses.map(
-        (s) => new Set(s.split(",").map(parseInt)),
+        (s) => new Set(s.split(",").map(Number.parseInt)),
     );
     triedGuesses.forEach(tryGuess);
 
@@ -92,7 +92,7 @@ const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => {
             <div class="card-container">
                 {availableCards.map((c, _i) => (
                     <button
-                        className={`card`}
+                        className={"card"}
                         onClick={(e: MouseEvent) => {
                             const target = e.target as HTMLButtonElement;
                             target?.classList.toggle("selected");
