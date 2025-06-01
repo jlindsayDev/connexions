@@ -9,7 +9,7 @@
     "type": "module",
     "private": true,
     "scripts": {
-        "dev": "bunx --bun vite dev",
+        "dev": "bunx --bun vite dev --host",
         "format": "bunx --bun biome format --write .",
         "lint": "bunx --bun biome lint --write ."
     },
