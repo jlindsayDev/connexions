@@ -2,7 +2,7 @@
 // README at: https://github.com/marcosgomesneto/bun-devcontainers/tree/main/src/bun-mariadb
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/configuration-editing/schemas/devContainer.vscode.schema.json",
-    "name": "Puzzles",
+    "name": "Connexions",
     "dockerFile": "Dockerfile",
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
     // Features to add to the dev container. More info: https://containers.dev/features.
