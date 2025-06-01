@@ -1,18 +1,25 @@
 {
     "name": "connexions",
-    "module": "index.ts",
+    "author": "jlindsaydev",
+    "description": "Play puzzles on your device",
+    "homepage": "https://github.com/jlindsaydev/connexions",
+    "license": "AGPLv3",
+    "version": "0.1.0",
+    "module": "app/index.tsx",
     "type": "module",
     "private": true,
     "scripts": {
-        "dev": "bunx --bun vite"
+        "dev": "bunx --bun vite dev",
+        "format": "bunx --bun biome format --write .",
+        "lint": "bunx --bun biome lint --write ."
     },
     "devDependencies": {
-        "@biomejs/biome": "beta",
+        "@biomejs/biome": "2.0.0-beta.5",
         "@types/bun": "latest",
-        "vite": "^6.3.5"
+        "vite": "latest"
     },
     "peerDependencies": {
-        "typescript": "^5.8.3"
+        "typescript": "latest"
     },
     "dependencies": {
         "dexie": "latest",
