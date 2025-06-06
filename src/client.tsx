@@ -1,12 +1,19 @@
 import { hc } from "hono/client";
 import { useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
-import type { Card, Category, Puzzle } from "models";
-import Calendar from "./components/calendar";
-import { Puzzle as PuzzleElem } from "./components/puzzle";
+import Calendar from "./calendar";
+import {
+    addPuzzle,
+    getPuzzle,
+    INDEXED_DB,
+    type Puzzle as PuzzleType,
+} from "./db";
 import type { AppType } from "./index";
+import { Puzzle as PuzzleElem } from "./puzzle";
 
 const client = hc<AppType>("/");
+
+const DB = INDEXED_DB;
 
 function App() {
     const date = new Date();
@@ -17,23 +24,40 @@ function App() {
     const dateStr = `${yearStr}-${monthStr}-${dayStr}`;
 
     const [selectedDate, setSelectedDate] = useState<string>(dateStr);
-    const [response, setResponse] = useState<
-        (Puzzle & Card[] & Category[]) | null
-    >(null);
+    const [response, setResponse] = useState<PuzzleType | null>(null);
 
     const handleDateChange = async (date: string): Promise<void> => {
         setSelectedDate(date);
+
+        const puzz = await getPuzzle(DB, date);
+        if (puzz) {
+            const { puzzle, cards, categories } = puzz;
+            setResponse(
+                [
+                    { puzzle: puzzle.id },
+                    { cards: cards.map((c) => c.content) },
+                    { categories: categories.map((c) => c.id) },
+                ].join(",\n"),
+            );
+            return;
+        }
 
         const apiResponse = await client.api.puzzle[":date"].$get({
             param: { date },
         });
 
         if (!apiResponse.ok) {
-            setResponse("No good");
+            // const errorMessage = await apiResponse.json();
+            // console.error(errorMessage.message);
+            setResponse(null);
             return;
         }
 
         const { puzzle, cards, categories } = await apiResponse.json();
+        const added = addPuzzle({ puzzle, cards, categories });
+        if (!added) {
+            console.error("failed to add puzzle. look into this!");
+        }
 
         setResponse(
             [
@@ -42,10 +66,6 @@ function App() {
                 categories.map((c) => c.difficulty),
             ].join(",\n"),
         );
-
-        // if date exists in IndexedDB, load puzzle
-
-        // if not, fetch from API
     };
 
     return (
@@ -55,48 +75,19 @@ function App() {
                 year={date.getFullYear()}
                 selectDateFn={handleDateChange}
             />
+
             <h3>{selectedDate}</h3>
-            {response && <pre>{response}</pre>}
+            <pre>{response ? response : "no good"}</pre>
+
             <PuzzleElem
-                date={selectedDate}
-                guesses={[]}
-                cards={[]}
-                categories={[]}
+                guessedCategories={[]}
+                availableCards={[]}
+                trySelectCard={() => {}}
+                tryGuess={() => {}}
             />
         </>
     );
 }
-
-// const ClockButton = () => {
-//     const [response, setResponse] = useState<string | null>(null);
-
-//     const handleClick = async () => {
-//         const response = await client.api.clock.$get();
-//         const data = await response.json();
-//         const headers = Array.from(response.headers.entries()).reduce<
-//             Record<string, string>
-//         >((acc, [key, value]) => {
-//             acc[key] = value;
-//             return acc;
-//         }, {});
-//         const fullResponse = {
-//             url: response.url,
-//             status: response.status,
-//             headers,
-//             body: data,
-//         };
-//         setResponse(JSON.stringify(fullResponse, null, 2));
-//     };
-
-//     return (
-//         <div>
-//             <button type="button" onClick={handleClick}>
-//                 Get Server Time
-//             </button>
-//             {response && <pre>{response}</pre>}
-//         </div>
-//     );
-// };
 
 const root = document.getElementById("root")!;
 render(<App />, root);

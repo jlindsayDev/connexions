@@ -1,26 +1,6 @@
 import type { Database } from "bun:sqlite";
 import type { Card, Category, Puzzle } from "models";
-
-// https://developer.mozilla.org/en-US/docs/Web/API/Window/btoa#unicode_strings
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
-
-const fromBase64 = (base64: string) => {
-    const binString = atob(base64);
-    const bytes = Uint8Array.from<string>(
-        binString,
-        (m) => m.codePointAt(0) ?? -99,
-    );
-    return new TextDecoder().decode(bytes);
-};
-
-const toBase64 = (text: string) => {
-    const bytes = new TextEncoder().encode(text);
-    const binString = Array.from(bytes, (byte) =>
-        String.fromCodePoint(byte),
-    ).join("");
-    return btoa(binString);
-};
+import { toBase64 } from "../utils";
 
 export const findPuzzleByDate = (
     db: Database,

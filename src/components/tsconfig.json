@@ -1,6 +1,0 @@
-{
-    "extends": "../../tsconfig.json",
-    "jsx": "react-jsx",
-    // "compilerOptions": { "jsxImportSource": "hono/jsx/dom" }
-    "compilerOptions": { "jsxImportSource": "hono/jsx" }
-}

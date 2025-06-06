@@ -2,6 +2,12 @@
 
 import { type Guess, INDEXED_DB } from "./dexie_db";
 
+export const addPuzzle = async ({ puzzle, cards, categories }) => {
+    const puzzleId = await INDEXED_DB.puzzles.add({
+        print_date: puzzle.print_date,
+    });
+};
+
 export const addGuess = async (
     print_date: string,
     num: number,
