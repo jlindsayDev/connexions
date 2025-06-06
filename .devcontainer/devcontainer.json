@@ -25,7 +25,8 @@
                     "source.organizeImports": "explicit",
                     "source.biome": "explicit",
                     "source.fixAll.biome": "explicit"
-                }
+                },
+                "editor.formatOnSave": false
             },
             "extensions": [
                 "oven.bun-vscode",

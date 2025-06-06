@@ -1,5 +1,61 @@
 import { type FC, useState } from "hono/jsx";
-import type { Card as CardType, Category as CategoryType } from "models";
+import { css } from "hono/jsx/dom/css";
+
+const styles = css`
+.category-container {
+    gap: 8px;
+    display: grid;
+    margin-bottom: 8px;
+}
+
+.card-container {
+    width: 100%;
+    display: grid;
+    gap: 1vw;
+    justify-content: space-evenly;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.card {
+    border: 1px dashed black;
+    padding: 3rem 0rem;
+    font-weight: bold;
+    font-size: 0.8rem;
+
+    border-radius: 5px;
+    word-wrap: break-word;
+    word-break: break-word;
+
+    transition: 250ms ease all;
+}
+
+.selected {
+    background-color: blanchedalmond;
+}
+`;
+
+export type PuzzleType = {
+    id: number;
+    print_date: string;
+    nyt_id: number | null;
+    difficulty: number | null;
+};
+
+export type CategoryType = {
+    id: number;
+    puzzle_id: number;
+    difficulty: number;
+    category: string;
+    hint_card_id: number | null;
+};
+
+export type CardType = {
+    id: number;
+    puzzle_id: number;
+    category_id: number;
+    position: number;
+    content: string;
+};
 
 type PuzzleProps = {
     date: string;
@@ -13,7 +69,7 @@ const guessedCategories: CategoryType[] = [];
 let availableCards: CardType[];
 let triedGuesses: Set<number>[];
 
-const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => {
+export const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => {
     const [cards, setCards] = useState(props.cards);
     const [categories, setCategories] = useState(props.categories);
     const [_guesses, _setGuesses] = useState(props.guesses);
@@ -78,12 +134,21 @@ const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => {
     );
     triedGuesses.forEach(tryGuess);
 
+    const fromBase64 = (base64: string) => {
+        const binString = atob(base64);
+        const bytes = Uint8Array.from<string>(
+            binString,
+            (m) => m.codePointAt(0) ?? -99,
+        );
+        return new TextDecoder().decode(bytes);
+    };
+
     return (
         <>
             <div class="category-container">
                 {guessedCategories.map((c, i) => (
                     <div class={`category-${c.difficulty}`} key={i}>
-                        <h4>{atob(c.category)}</h4>
+                        <h4>{fromBase64(c.category)}</h4>
                         <h5>WORDS</h5>
                     </div>
                 ))}

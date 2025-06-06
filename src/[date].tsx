@@ -6,7 +6,7 @@ import {
 } from "../../features/sqlite_db";
 import Puzzle from "../../islands/puzzle";
 
-export const GET = createRoute((c) => {
+export const GET = createRoute(async (c) => {
     const { date } = c.req.param<"/:date">();
 
     const dateObj = new Date(date);

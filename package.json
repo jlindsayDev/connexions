@@ -10,13 +10,14 @@
     "private": true,
     "scripts": {
         "dev": "bunx --bun vite dev --host",
-        "format": "bunx --bun biome format --write .",
-        "lint": "bunx --bun biome lint --write ."
+        "build": "bunx --bun vite build --mode client && bunx --bun vite build"
     },
     "devDependencies": {
         "@biomejs/biome": "2.0.0-beta.5",
+        "@hono/vite-build": "latest",
+        "@hono/vite-dev-server": "latest",
         "@types/bun": "latest",
-        "vite": "latest"
+        "vite": "npm:rolldown-vite@latest"
     },
     "peerDependencies": {
         "typescript": "latest"
@@ -24,6 +25,6 @@
     "dependencies": {
         "dexie": "latest",
         "hono": "latest",
-        "honox": "latest"
+        "vite-plugin-pwa": "latest"
     }
 }
