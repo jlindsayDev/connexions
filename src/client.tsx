@@ -26,19 +26,14 @@ function App() {
     const [selectedDate, setSelectedDate] = useState<string>(dateStr);
     const [response, setResponse] = useState<PuzzleType | null>(null);
 
+    const [selectedCards, setSelectedCards] = useState<number[]>([]);
+
     const handleDateChange = async (date: string): Promise<void> => {
         setSelectedDate(date);
 
-        const puzz = await getPuzzle(DB, date);
+        let puzz = await getPuzzle(DB, date);
         if (puzz) {
-            const { puzzle, cards, categories } = puzz;
-            setResponse(
-                [
-                    { puzzle: puzzle.id },
-                    { cards: cards.map((c) => c.content) },
-                    { categories: categories.map((c) => c.id) },
-                ].join(",\n"),
-            );
+            setResponse(puzz);
             return;
         }
 
@@ -47,26 +42,60 @@ function App() {
         });
 
         if (!apiResponse.ok) {
-            // const errorMessage = await apiResponse.json();
-            // console.error(errorMessage.message);
+            console.error(await apiResponse.json());
             setResponse(null);
             return;
         }
 
-        const { puzzle, cards, categories } = await apiResponse.json();
-        const added = addPuzzle({ puzzle, cards, categories });
+        puzz = await apiResponse.json();
+        if (!puzz) {
+            console.error("Not a real puzzle?");
+        }
+
+        const added = addPuzzle(puzz);
         if (!added) {
             console.error("failed to add puzzle. look into this!");
         }
 
-        setResponse(
-            [
-                puzzle.id,
-                cards.map((c) => c.position),
-                categories.map((c) => c.difficulty),
-            ].join(",\n"),
-        );
+        setResponse(puzz);
     };
+
+    const toggleCard =
+        (position: number) =>
+        (e: MouseEvent): void => {
+            const target = e.target as HTMLButtonElement;
+
+            const filtered = selectedCards.filter((n) => n !== position);
+
+            console.debug(
+                selectedCards,
+                position * (filtered.length !== selectedCards.length ? -1 : 1),
+            );
+
+            if (filtered.length !== selectedCards.length) {
+                target?.classList.toggle("selected");
+                setSelectedCards(filtered);
+                return;
+            }
+
+            if (selectedCards.length >= 4) {
+                return;
+            }
+
+            target?.classList.toggle("selected");
+            setSelectedCards([...selectedCards, position]);
+        };
+
+    const puzz = response ? (
+        <PuzzleElem
+            guessedCategories={[]}
+            availableCards={response.cards}
+            trySelectCard={toggleCard}
+            tryGuess={() => {}}
+        />
+    ) : (
+        <></>
+    );
 
     return (
         <>
@@ -77,14 +106,7 @@ function App() {
             />
 
             <h3>{selectedDate}</h3>
-            <pre>{response ? response : "no good"}</pre>
-
-            <PuzzleElem
-                guessedCategories={[]}
-                availableCards={[]}
-                trySelectCard={() => {}}
-                tryGuess={() => {}}
-            />
+            <pre>{response ? puzz : "no good"}</pre>
         </>
     );
 }

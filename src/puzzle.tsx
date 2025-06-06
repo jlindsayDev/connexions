@@ -34,7 +34,7 @@ const cardCls = css`
 
     transition: 250ms ease all;
 
-    .selected {
+    &.selected {
         background-color: blanchedalmond;
     }
 `;
@@ -42,37 +42,42 @@ const cardCls = css`
 type PuzzleProps = {
     guessedCategories: CategoryType[];
     availableCards: CardType[];
-    trySelectCard: () => void;
+    trySelectCard: (position: number) => (e: MouseEvent) => void;
     tryGuess: () => void;
 };
 
-export const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
-    <>
-        <div class={categoryContainerCls}>
-            {props.guessedCategories.map((c, i) => (
-                <div class={`category-${c.difficulty}`} key={i}>
-                    <h4>{fromBase64(c.category)}</h4>
-                    <h5>WORDS</h5>
-                </div>
-            ))}
-        </div>
+export const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => {
+    return (
+        <>
+            <div class={categoryContainerCls}>
+                {props.guessedCategories.map((c, i) => (
+                    <div class={`category-${c.difficulty}`} key={i}>
+                        <h4>{fromBase64(c.category)}</h4>
+                        <h5>WORDS</h5>
+                    </div>
+                ))}
+            </div>
 
-        <div class={cardContainerCls}>
-            {props.availableCards.map((c, _i) => (
-                <button
-                    class={cardCls}
-                    onClick={(_e: MouseEvent) => props.trySelectCard()}
-                    key={c.position}
-                >
-                    {fromBase64(c.content)}
-                </button>
-            ))}
-        </div>
+            <div class={cardContainerCls}>
+                {props.availableCards.map((c, _i) => (
+                    <button
+                        class={cardCls}
+                        onClick={props.trySelectCard(c.position)}
+                        key={c.position}
+                    >
+                        {fromBase64(c.content)}
+                    </button>
+                ))}
+            </div>
 
-        <button type="button" onClick={(_e: MouseEvent) => props.tryGuess()}>
-            Submit
-        </button>
-    </>
-);
+            <button
+                type="button"
+                onClick={(_e: MouseEvent) => props.tryGuess()}
+            >
+                Submit
+            </button>
+        </>
+    );
+};
 
 export default Puzzle;
