@@ -3,10 +3,15 @@ import { useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import Calendar from "./calendar";
 import {
-    addPuzzle,
-    getPuzzle,
+    addGameState,
+    getGameState,
+    getGuesses,
     INDEXED_DB,
-    type Puzzle as PuzzleType,
+    resetData,
+    type CardModel,
+    type CategoryModel,
+    type GameState,
+    type GuessModel,
 } from "./db";
 import type { AppType } from "./index";
 import { Puzzle as PuzzleElem } from "./puzzle";
@@ -24,81 +29,162 @@ function App() {
     const dateStr = `${yearStr}-${monthStr}-${dayStr}`;
 
     const [selectedDate, setSelectedDate] = useState<string>(dateStr);
-    const [response, setResponse] = useState<PuzzleType | null>(null);
+    const [gameState, setGameState] = useState<GameState | null>(null);
 
-    const [selectedCards, setSelectedCards] = useState<number[]>([]);
+    const [guesses, setGuesses] = useState<GuessModel[]>([]);
+    const [selectedCards, setSelectedCards] = useState<CardModel[]>([]);
+    const [availableCards, setAvailableCards] = useState<CardModel[]>([]);
+    const [guessedCategories, setGuessedCategories] = useState<CategoryModel[]>(
+        [],
+    );
+
+    const initializeGame = async (gameState: GameState) => {
+        setGameState(gameState);
+
+        setAvailableCards([...gameState.cards]);
+        setGuesses([]);
+        setSelectedCards([]);
+        setGuessedCategories([]);
+
+        const fetchedGuesses = await getGuesses(DB, gameState.puzzle);
+        console.log(`fetched ${fetchedGuesses.length} guesses!`);
+        fetchedGuesses.forEach(() => tryGuess);
+    };
 
     const handleDateChange = async (date: string): Promise<void> => {
         setSelectedDate(date);
 
-        let puzz = await getPuzzle(DB, date);
-        if (puzz) {
-            setResponse(puzz);
+        let gameState = await getGameState(DB, date);
+        if (gameState) {
+            console.info("loading game state from indexeddb");
+            await initializeGame(gameState);
             return;
         }
 
         const apiResponse = await client.api.puzzle[":date"].$get({
             param: { date },
         });
-
         if (!apiResponse.ok) {
-            console.error(await apiResponse.json());
-            setResponse(null);
+            console.error(`API response no good... ${apiResponse}`);
+            setGameState(null);
             return;
         }
 
-        puzz = await apiResponse.json();
-        if (!puzz) {
-            console.error("Not a real puzzle?");
+        gameState = await apiResponse.json();
+        if (!gameState) {
+            console.error("Not a real puzzle...?");
+            return;
+        }
+        if (!addGameState(DB, gameState)) {
+            console.error("Failed to add puzzle. Look into this!");
         }
 
-        const added = addPuzzle(puzz);
-        if (!added) {
-            console.error("failed to add puzzle. look into this!");
-        }
-
-        setResponse(puzz);
+        await initializeGame(gameState);
     };
 
+    // const toggleCard = (e: MouseEvent, card: CardModel): void => {
     const toggleCard =
-        (position: number) =>
+        (card: CardModel) =>
         (e: MouseEvent): void => {
             const target = e.target as HTMLButtonElement;
 
-            const filtered = selectedCards.filter((n) => n !== position);
+            // console.log(
+            //     selectedCards.map((c) => c.id),
+            //     card.id,
+            // );
 
-            console.debug(
-                selectedCards,
-                position * (filtered.length !== selectedCards.length ? -1 : 1),
-            );
+            if (selectedCards.length < 4) {
+                target.classList.add("selected");
+                setSelectedCards([...selectedCards, card]);
 
-            if (filtered.length !== selectedCards.length) {
-                target?.classList.toggle("selected");
-                setSelectedCards(filtered);
-                return;
+                // setSelectedCards((cardz) => {
+                //     console.log(`BEFORE SELZ: ${cardz.map((c) => c.id)}`);
+                //     cardz = [...cardz, card];
+                //     console.log(`AFTER SELZ: ${cardz.map((c) => c.id)}`);
+                //     return cardz;
+                // });
+            } else if (selectedCards.includes(card)) {
+                target.classList.remove("selected");
+                setSelectedCards(selectedCards.filter((c) => c !== card));
+
+                // setSelectedCards((cardz) => {
+                //     console.log(`BEFORE SELZ: ${cardz.map((c) => c.id)}`);
+                //     cardz = cardz.filter((c) => c !== card);
+                //     console.log(`AFTER SELZ: ${cardz.map((c) => c.id)}`);
+                //     return cardz;
+                // });
             }
-
-            if (selectedCards.length >= 4) {
-                return;
-            }
-
-            target?.classList.toggle("selected");
-            setSelectedCards([...selectedCards, position]);
         };
 
-    const puzz = response ? (
-        <PuzzleElem
-            guessedCategories={[]}
-            availableCards={response.cards}
-            trySelectCard={toggleCard}
-            tryGuess={() => {}}
-        />
-    ) : (
-        <></>
-    );
+    const tryGuess = (_e: MouseEvent): void => {
+        if (!gameState || selectedCards.length !== 4) {
+            console.log(
+                `WILL NOT GUESS.  Num SelectedCards: ${selectedCards.length}`,
+            );
+            return;
+        }
+
+        const guessStr = selectedCards
+            .map((c) => c.id)
+            .sort()
+            .join(",");
+        if (guesses.map((g) => g.guess).includes(guessStr)) {
+            console.error(`Already tried guess: ${guessStr}`);
+            return;
+        }
+
+        // const guessModel = addGuess(selectedDate, guess);
+        // setGuesses([...guesses, guess]);
+
+        const categoryId = selectedCards[0]?.category_id ?? -10;
+        const validGuess = selectedCards.every(
+            ({ category_id }) => categoryId == category_id,
+        );
+        if (!validGuess) {
+            return;
+        }
+
+        const guessedCategory =
+            gameState.categories.find(({ id }) => id == categoryId) ?? null;
+
+        if (!guessedCategory) {
+            console.error(`Not a guessed category: ${guessedCategory}`);
+            return;
+        }
+
+        // setAvailableCards((cardz) => {
+        //     console.log(`BEFORE CARDZ: ${cardz.map((c) => c.id)}`);
+        //     cardz = cardz.filter((c) => !selectedCards.includes(c));
+        //     console.log(`AFTER CARDZ: ${cardz.map((c) => c.id)}`);
+        //     return cardz;
+        // });
+        setAvailableCards(
+            availableCards.filter((c) => !selectedCards.includes(c)),
+        );
+        // setGuessedCategories((catz) => {
+        //     console.log(`BEFORE CATZ: ${catz.map((c) => c.id)}`);
+        //     catz = [...catz, guessedCategory];
+        //     console.log(`AFTER CATZ: ${catz.map((c) => c.id)}`);
+        //     return catz;
+        // });
+        setGuessedCategories([...guessedCategories, guessedCategory]);
+        // setSelectedCards((cardz) => {
+        //     console.log(`BEFORE SELZ: ${cardz.map((c) => c.id)}`);
+        //     cardz = cardz.filter(() => false);
+        //     console.log(`AFTER SELZ: ${cardz.map((c) => c.id)}`);
+        //     return cardz;
+        // });
+        setSelectedCards([]);
+
+        console.log("GUESS COMPLETED!");
+    };
 
     return (
         <>
+            <button type="button" onClick={() => resetData(DB)}>
+                CLEAR THE DATA
+            </button>
+
             <Calendar
                 month={date.getMonth()}
                 year={date.getFullYear()}
@@ -106,7 +192,17 @@ function App() {
             />
 
             <h3>{selectedDate}</h3>
-            <pre>{response ? puzz : "no good"}</pre>
+
+            {gameState ? (
+                <PuzzleElem
+                    guessedCategories={guessedCategories}
+                    availableCards={availableCards}
+                    trySelectCard={toggleCard}
+                    tryGuess={tryGuess}
+                />
+            ) : (
+                <pre>no good</pre>
+            )}
         </>
     );
 }

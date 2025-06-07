@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
 import { Style } from "hono/css";
 import { html } from "hono/html";
-import { fetchPuzzle } from "./db";
+import { fetchGameState } from "./db";
 
 const app = new Hono();
 
@@ -41,7 +41,7 @@ const routes = app.get("/api/puzzle/:date", (c) => {
     const date = c.req.param("date");
 
     try {
-        return c.json(fetchPuzzle(DB, date));
+        return c.json(fetchGameState(DB, date));
     } catch (e) {
         return c.json({ ok: false, message: `${e}` }, 404);
     }

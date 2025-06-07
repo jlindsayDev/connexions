@@ -1,6 +1,6 @@
 import type { FC } from "hono/jsx";
 import { css } from "hono/jsx/dom/css";
-import type { Card as CardType, Category as CategoryType } from "models";
+import type { CardModel, CategoryModel } from "./db";
 import { fromBase64 } from "./utils";
 
 const categoryContainerCls = css`
@@ -8,10 +8,10 @@ const categoryContainerCls = css`
     display: grid;
     margin-bottom: 8px;
 
-    > .category-0 { background-color: rgb(84, 146, 255); }
-    > .category-1 { background-color: rgb(105, 227, 82); }
-    > .category-2 { background-color: rgb(251, 212, 0); }
-    > .category-3 { background-color: rgb(223, 123, 234); }
+    & .category-0 { background-color: rgb(84, 146, 255); }
+    & .category-1 { background-color: rgb(105, 227, 82); }
+    & .category-2 { background-color: rgb(251, 212, 0); }
+    & .category-3 { background-color: rgb(223, 123, 234); }
 `;
 
 const cardContainerCls = css`
@@ -39,45 +39,43 @@ const cardCls = css`
     }
 `;
 
+const submitBtnCls = css``;
+
 type PuzzleProps = {
-    guessedCategories: CategoryType[];
-    availableCards: CardType[];
-    trySelectCard: (position: number) => (e: MouseEvent) => void;
-    tryGuess: () => void;
+    guessedCategories: CategoryModel[];
+    availableCards: CardModel[];
+    // trySelectCard: (e: MouseEvent, card: CardModel) => void;
+    trySelectCard: (card: CardModel) => (e: MouseEvent) => void;
+    tryGuess: (e: MouseEvent) => void;
 };
 
-export const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => {
-    return (
-        <>
-            <div class={categoryContainerCls}>
-                {props.guessedCategories.map((c, i) => (
-                    <div class={`category-${c.difficulty}`} key={i}>
-                        <h4>{fromBase64(c.category)}</h4>
-                        <h5>WORDS</h5>
-                    </div>
-                ))}
-            </div>
+export const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
+    <>
+        <div class={categoryContainerCls}>
+            {props.guessedCategories.map((c, i) => (
+                <div class={`category-${c.difficulty}`} key={i}>
+                    <h4>{fromBase64(c.category)}</h4>
+                    <h5>WORDS</h5>
+                </div>
+            ))}
+        </div>
 
-            <div class={cardContainerCls}>
-                {props.availableCards.map((c, _i) => (
-                    <button
-                        class={cardCls}
-                        onClick={props.trySelectCard(c.position)}
-                        key={c.position}
-                    >
-                        {fromBase64(c.content)}
-                    </button>
-                ))}
-            </div>
+        <div class={cardContainerCls}>
+            {props.availableCards.map((c) => (
+                <button
+                    class={cardCls}
+                    onClick={props.trySelectCard(c)}
+                    key={c.id}
+                >
+                    {fromBase64(c.content)}
+                </button>
+            ))}
+        </div>
 
-            <button
-                type="button"
-                onClick={(_e: MouseEvent) => props.tryGuess()}
-            >
-                Submit
-            </button>
-        </>
-    );
-};
+        <button type="button" onClick={props.tryGuess} class={submitBtnCls}>
+            Submit
+        </button>
+    </>
+);
 
 export default Puzzle;

@@ -15,7 +15,7 @@ type PuzzleModel = {
     status: PuzzleStatus | null;
 };
 
-type CategoryModel = {
+export type CategoryModel = {
     id: number;
     puzzle_id: number;
     difficulty: number;
@@ -23,7 +23,7 @@ type CategoryModel = {
     hint_card_id: number | null;
 };
 
-type CardModel = {
+export type CardModel = {
     id: number;
     puzzle_id: number;
     category_id: number;
@@ -31,20 +31,20 @@ type CardModel = {
     content: string;
 };
 
-export type Puzzle = {
-    puzzle: PuzzleModel;
-    categories: CategoryModel[];
-    cards: CardModel[];
-};
-
 export type GuessModel = {
     id: number;
     puzzle_id: number;
-    num: number;
     guess: string;
 };
 
-export const fetchPuzzle = (db: Database, date: string): Puzzle => {
+export type GameState = {
+    puzzle: PuzzleModel;
+    categories: CategoryModel[];
+    cards: CardModel[];
+    guesses: GuessModel[];
+};
+
+export const fetchGameState = (db: Database, date: string): GameState => {
     let stmt;
 
     stmt = db.prepare<PuzzleModel, string>(
@@ -81,10 +81,15 @@ export const fetchPuzzle = (db: Database, date: string): Puzzle => {
 
     const encodedCategories = categories.map((c) => ({
         ...c,
-        content: toBase64(c.category),
+        category: toBase64(c.category),
     }));
 
-    return { puzzle, cards: encodedCards, categories: encodedCategories };
+    return {
+        puzzle,
+        cards: encodedCards,
+        categories: encodedCategories,
+        guesses: [],
+    };
 };
 
 export const INDEXED_DB = new Dexie("PuzzlesDatabase") as Dexie & {
@@ -99,14 +104,14 @@ INDEXED_DB.version(2).stores({
     puzzles: "++id, *print_date",
     categories: "++id, *puzzle_id",
     cards: "++id, *puzzle_id, *category_id",
-    guesses: "++id, *print_date, num",
+    guesses: "++id, *puzzle_id",
 });
 
-export const getPuzzle = async (
+export const getGameState = async (
     DB: typeof INDEXED_DB,
     print_date: string,
-): Promise<Puzzle | null> => {
-    const puzzle = (await DB.puzzles.get({ print_date })) ?? null;
+): Promise<GameState | null> => {
+    const puzzle = await DB.puzzles.get({ print_date });
     if (!puzzle) {
         return null;
     }
@@ -116,15 +121,16 @@ export const getPuzzle = async (
         .where({ puzzle_id: puzzle.id })
         .toArray();
 
-    return { puzzle, cards, categories };
+    const guesses = await DB.guesses.where({ puzzle_id: puzzle.id }).toArray();
+
+    return { puzzle, cards, categories, guesses };
 };
 
-export const addPuzzle = async ({
-    puzzle,
-    cards,
-    categories,
-}: Puzzle): Promise<boolean> => {
-    const puzzle_id = await INDEXED_DB.puzzles.add({
+export const addGameState = async (
+    DB: typeof INDEXED_DB,
+    { puzzle, cards, categories, guesses }: GameState,
+): Promise<boolean> => {
+    const puzzle_id = await DB.puzzles.add({
         ...puzzle,
         status: PuzzleStatus.NotAttempted,
     });
@@ -134,15 +140,52 @@ export const addPuzzle = async ({
     const categoryRecords = categories.map((c) => ({ ...c, puzzle_id }));
 
     categoryRecords.forEach(async (category) => {
-        const category_id = await INDEXED_DB.categories.add(category);
+        const category_id = await DB.categories.add(category);
         const categoryCards =
             cardMapping.get(category.id)?.map((c) => ({
                 ...c,
                 category_id,
                 puzzle_id,
             })) ?? [];
-        await INDEXED_DB.cards.bulkAdd(categoryCards);
+        await DB.cards.bulkAdd(categoryCards);
     });
 
+    await DB.guesses.bulkAdd(guesses);
+
     return true;
+};
+
+export const addGuess = async (
+    DB: typeof INDEXED_DB,
+    puzzle_id: number,
+    guess: string,
+): Promise<GuessModel> => {
+    const guess_id = await DB.guesses.add({
+        puzzle_id,
+        guess,
+    });
+    const guessModel = await DB.guesses.get(guess_id);
+    if (!guessModel) {
+        throw `Guess somehow did not insert: puzzle_id=${puzzle_id} guess=${guess}`;
+    }
+    return guessModel;
+};
+
+export const getGuesses = async (
+    DB: typeof INDEXED_DB,
+    { id }: PuzzleModel,
+): Promise<GuessModel[]> => {
+    return await DB.guesses.where({ puzzle_id: id }).toArray();
+    // const guesses = guessPromise.map(
+    //     (g) => new Set(g.guess.split(",").map(parseInt)), // Promise<Set<number>[]>
+    //     // (g) => g.guess,
+    // );
+    // return guesses;
+};
+
+export const resetData = async (DB: typeof INDEXED_DB): Promise<void> => {
+    if (confirm("Delete all data?")) {
+        await DB.tables.map((t) => t.clear());
+        alert("all done...");
+    }
 };
