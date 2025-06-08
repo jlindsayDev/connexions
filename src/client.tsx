@@ -65,12 +65,12 @@ function App() {
         (e: MouseEvent): void => {
             const target = e.target as HTMLButtonElement;
 
-            if (selectedCards.length < 4) {
-                target.classList.add("selected");
-                setSelectedCards([...selectedCards, card]);
-            } else if (selectedCards.includes(card)) {
+            if (selectedCards.includes(card)) {
                 target.classList.remove("selected");
                 setSelectedCards(selectedCards.filter((c) => c !== card));
+            } else if (selectedCards.length < 4) {
+                target.classList.add("selected");
+                setSelectedCards([...selectedCards, card]);
             }
         };
 
