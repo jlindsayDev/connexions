@@ -1,6 +1,6 @@
 import type { FC } from "hono/jsx";
 import { css } from "hono/jsx/dom/css";
-import type { CardModel, CategoryModel } from "./db";
+import type { CardModel, CategoryModel } from "./models";
 import { fromBase64 } from "./utils";
 
 const categoryContainerCls = css`
@@ -44,9 +44,8 @@ const submitBtnCls = css``;
 type PuzzleProps = {
     guessedCategories: CategoryModel[];
     availableCards: CardModel[];
-    // trySelectCard: (e: MouseEvent, card: CardModel) => void;
     trySelectCard: (card: CardModel) => (e: MouseEvent) => void;
-    tryGuess: (e: MouseEvent) => void;
+    tryGuess: (_e: MouseEvent) => void;
 };
 
 export const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (

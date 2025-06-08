@@ -30,3 +30,20 @@ export const toBase64 = (text: string) => {
     ).join("");
     return btoa(binString);
 };
+
+export const showChangeOnAdd = <T>(
+    callbackFn: Function,
+    xs: T[],
+    x: T,
+): void => {
+    // callbackFn(xs => {
+    //     console.log(`BEFORE ${callbackFn.name}: ${xs}`);
+    //     xs = [...xs, x]
+    //     console.log()
+    //     return xs
+    // })
+    // callbackFn([...xs, x]);
+    // console.log(`AFTER ${callbackFn.name}:`);
+};
+
+export const showChangeOnRemove = <T>(callbackFn: Function): void => {};

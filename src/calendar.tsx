@@ -4,7 +4,7 @@ import { css } from "hono/jsx/dom/css";
 type CalendarProps = {
     month: number;
     year: number;
-    selectDateFn: (date: string) => void;
+    selectDateFn: (date: string) => (_e: MouseEvent) => void;
 };
 
 const container = css`
@@ -112,13 +112,7 @@ const Calendar = ({ month, year, selectDateFn }: CalendarProps) => {
             const date = `${year}-${monthStr}-${dayStr}`;
 
             const dayElement = (
-                <button
-                    key={date}
-                    onClick={(_e: MouseEvent) => {
-                        selectDateFn(date);
-                    }}
-                    class={gridDay}
-                >
+                <button key={date} onClick={selectDateFn(date)} class={gridDay}>
                     {i}
                 </button>
             );

@@ -1,48 +1,14 @@
 import type { Database } from "bun:sqlite";
 import { Dexie, type EntityTable } from "dexie";
+import {
+    type CardModel,
+    type CategoryModel,
+    type GameState,
+    type GuessModel,
+    type PuzzleModel,
+    PuzzleStatus,
+} from "./models";
 import { toBase64 } from "./utils";
-
-enum PuzzleStatus {
-    NotAttempted = 0,
-    Attempted = 1,
-    Solved = 2,
-    New = 3,
-}
-
-type PuzzleModel = {
-    id: number;
-    print_date: string;
-    status: PuzzleStatus | null;
-};
-
-export type CategoryModel = {
-    id: number;
-    puzzle_id: number;
-    difficulty: number;
-    category: string;
-    hint_card_id: number | null;
-};
-
-export type CardModel = {
-    id: number;
-    puzzle_id: number;
-    category_id: number;
-    position: number;
-    content: string;
-};
-
-export type GuessModel = {
-    id: number;
-    puzzle_id: number;
-    guess: string;
-};
-
-export type GameState = {
-    puzzle: PuzzleModel;
-    categories: CategoryModel[];
-    cards: CardModel[];
-    guesses: GuessModel[];
-};
 
 export const fetchGameState = (db: Database, date: string): GameState => {
     let stmt;
@@ -88,7 +54,6 @@ export const fetchGameState = (db: Database, date: string): GameState => {
         puzzle,
         cards: encodedCards,
         categories: encodedCategories,
-        guesses: [],
     };
 };
 
@@ -121,14 +86,12 @@ export const getGameState = async (
         .where({ puzzle_id: puzzle.id })
         .toArray();
 
-    const guesses = await DB.guesses.where({ puzzle_id: puzzle.id }).toArray();
-
-    return { puzzle, cards, categories, guesses };
+    return { puzzle, cards, categories };
 };
 
 export const addGameState = async (
     DB: typeof INDEXED_DB,
-    { puzzle, cards, categories, guesses }: GameState,
+    { puzzle, cards, categories }: GameState,
 ): Promise<boolean> => {
     const puzzle_id = await DB.puzzles.add({
         ...puzzle,
@@ -150,23 +113,21 @@ export const addGameState = async (
         await DB.cards.bulkAdd(categoryCards);
     });
 
-    await DB.guesses.bulkAdd(guesses);
-
     return true;
 };
 
 export const addGuess = async (
     DB: typeof INDEXED_DB,
-    puzzle_id: number,
+    { id }: PuzzleModel,
     guess: string,
 ): Promise<GuessModel> => {
     const guess_id = await DB.guesses.add({
-        puzzle_id,
+        puzzle_id: id,
         guess,
     });
     const guessModel = await DB.guesses.get(guess_id);
     if (!guessModel) {
-        throw `Guess somehow did not insert: puzzle_id=${puzzle_id} guess=${guess}`;
+        throw `Guess somehow did not insert: puzzle_id=${id} guess=${guess}`;
     }
     return guessModel;
 };
@@ -176,16 +137,10 @@ export const getGuesses = async (
     { id }: PuzzleModel,
 ): Promise<GuessModel[]> => {
     return await DB.guesses.where({ puzzle_id: id }).toArray();
-    // const guesses = guessPromise.map(
-    //     (g) => new Set(g.guess.split(",").map(parseInt)), // Promise<Set<number>[]>
-    //     // (g) => g.guess,
-    // );
-    // return guesses;
 };
 
-export const resetData = async (DB: typeof INDEXED_DB): Promise<void> => {
+export const resetData = (DB: typeof INDEXED_DB): void => {
     if (confirm("Delete all data?")) {
-        await DB.tables.map((t) => t.clear());
-        alert("all done...");
+        DB.tables.map(async (t) => await t.clear());
     }
 };
