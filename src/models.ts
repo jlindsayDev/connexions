@@ -31,6 +31,7 @@ export type GuessModel = {
     id: number;
     puzzle_id: number;
     guess: string;
+    category_id: number | null;
 };
 
 export type GameState = {

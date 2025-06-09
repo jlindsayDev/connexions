@@ -6,12 +6,13 @@ import {
     addGameState,
     addGuess,
     getGameState,
+    getGuess,
     getGuesses,
     INDEXED_DB,
     resetData,
 } from "./db";
 import type { AppType } from "./index";
-import type { CardModel, CategoryModel, GameState, GuessModel } from "./models";
+import type { CardModel, CategoryModel, GameState } from "./models";
 import { Puzzle as PuzzleElem } from "./puzzle";
 
 const client = hc<AppType>("/");
@@ -20,7 +21,6 @@ const DB = INDEXED_DB;
 
 function App() {
     const [gameState, setGameState] = useState<GameState | null>(null);
-    const [guesses, setGuesses] = useState<GuessModel[]>([]);
     const [selectedCards, setSelectedCards] = useState<CardModel[]>([]);
     const [availableCards, setAvailableCards] = useState<CardModel[]>([]);
     const [guessedCategories, setGuessedCategories] = useState<CategoryModel[]>(
@@ -29,13 +29,77 @@ function App() {
 
     const initializeGame = async (gameState: GameState) => {
         setGameState(gameState);
-
         setSelectedCards([]);
-        setAvailableCards([...gameState.cards]);
 
-        setGuesses([]);
-        setGuessedCategories([]);
-        (await getGuesses(DB, gameState.puzzle)).forEach(doGuess);
+        const categories: CategoryModel[] = [];
+        let cards: CardModel[] = [...gameState.cards];
+
+        const guesses = await getGuesses(DB, gameState.puzzle);
+        guesses
+            .filter(({ category_id }) => category_id)
+            .forEach(({ category_id: guessCategoryId }) => {
+                const guessedCategory = gameState.categories.find(
+                    ({ id }) => guessCategoryId == id,
+                );
+
+                if (guessedCategory) {
+                    categories.push(guessedCategory);
+                    cards = [
+                        ...cards.filter(
+                            ({ category_id: id }) => guessCategoryId !== id,
+                        ),
+                    ];
+                }
+            });
+
+        setGuessedCategories(categories);
+        setAvailableCards(cards);
+    };
+
+    const tryGuess = async (_e: MouseEvent): Promise<void> => {
+        if (!gameState || selectedCards.length !== 4) {
+            return;
+        }
+
+        const guessStr = selectedCards
+            .map((c) => c.id)
+            .sort()
+            .join(",");
+
+        const alreadyGuessed = await getGuess(DB, gameState.puzzle, guessStr);
+        if (alreadyGuessed) {
+            console.error(
+                `Already tried WRONG guess: puzzle=${gameState.puzzle.id} ${guessStr}`,
+            );
+            return;
+        }
+
+        const categoryId = selectedCards[0]?.category_id;
+        const correctGuess = selectedCards.every(
+            ({ category_id }) => categoryId == category_id,
+        );
+
+        if (!correctGuess) {
+            console.error("INCORRECT");
+            await addGuess(DB, gameState.puzzle, guessStr);
+            return;
+        }
+
+        const guessedCategory = gameState.categories.find(
+            ({ id }) => categoryId == id,
+        );
+        if (guessedCategory) {
+            await addGuess(DB, gameState.puzzle, guessStr, categoryId);
+
+            setGuessedCategories((categories) => [
+                ...categories,
+                guessedCategory,
+            ]);
+            setAvailableCards((cards) =>
+                cards.filter((c) => !selectedCards.includes(c)),
+            );
+            setSelectedCards([]);
+        }
     };
 
     const handleDateChange = (date: string) => async (_e: MouseEvent) => {
@@ -74,52 +138,6 @@ function App() {
             }
         };
 
-    const tryGuess = async (_e: MouseEvent): Promise<void> => {
-        if (!gameState || selectedCards.length !== 4) {
-            return;
-        }
-
-        const guessStr = selectedCards
-            .map((c) => c.id)
-            .sort()
-            .join(",");
-        if (guesses.map((g) => g.guess).includes(guessStr)) {
-            console.error(`Already tried guess: ${guessStr}`);
-            return;
-        }
-        const guess = await addGuess(DB, gameState.puzzle, guessStr);
-        doGuess(guess);
-    };
-
-    const doGuess = (guess: GuessModel) => {
-        if (!gameState) {
-            return;
-        }
-
-        setGuesses([...guesses, guess]);
-
-        const categoryId = selectedCards[0]?.category_id;
-        const validGuess = selectedCards.every(
-            ({ category_id }) => categoryId == category_id,
-        );
-        if (!validGuess) {
-            return;
-        }
-
-        const guessedCategory = gameState.categories.find(
-            ({ id }) => id == categoryId,
-        );
-        if (!guessedCategory) {
-            return;
-        }
-
-        setAvailableCards(
-            availableCards.filter((c) => !selectedCards.includes(c)),
-        );
-        setGuessedCategories([...guessedCategories, guessedCategory]);
-        setSelectedCards([]);
-    };
-
     const date = new Date();
     return (
         <>
@@ -127,11 +145,15 @@ function App() {
                 CLEAR THE DATA
             </button>
 
+            <hr />
+
             <Calendar
                 month={date.getMonth()}
                 year={date.getFullYear()}
                 selectDateFn={handleDateChange}
             />
+
+            <hr />
 
             {gameState ? (
                 <PuzzleElem

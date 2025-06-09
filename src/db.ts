@@ -118,25 +118,35 @@ export const addGameState = async (
 
 export const addGuess = async (
     DB: typeof INDEXED_DB,
-    { id }: PuzzleModel,
+    { id: puzzle_id }: PuzzleModel,
     guess: string,
+    category_id: number | null = null,
 ): Promise<GuessModel> => {
     const guess_id = await DB.guesses.add({
-        puzzle_id: id,
+        puzzle_id,
+        category_id,
         guess,
     });
     const guessModel = await DB.guesses.get(guess_id);
     if (!guessModel) {
-        throw `Guess somehow did not insert: puzzle_id=${id} guess=${guess}`;
+        throw `Guess somehow did not insert: puzzle_id=${puzzle_id} guess=${guess}`;
     }
     return guessModel;
 };
 
+export const getGuess = async (
+    DB: typeof INDEXED_DB,
+    { id: puzzle_id }: PuzzleModel,
+    guess: string,
+): Promise<GuessModel | undefined> => {
+    return await DB.guesses.where({ puzzle_id, guess }).first();
+};
+
 export const getGuesses = async (
     DB: typeof INDEXED_DB,
-    { id }: PuzzleModel,
+    { id: puzzle_id }: PuzzleModel,
 ): Promise<GuessModel[]> => {
-    return await DB.guesses.where({ puzzle_id: id }).toArray();
+    return await DB.guesses.where({ puzzle_id }).toArray();
 };
 
 export const resetData = (DB: typeof INDEXED_DB): void => {
