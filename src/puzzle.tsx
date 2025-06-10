@@ -45,7 +45,7 @@ type PuzzleProps = {
     guessedCategories: CategoryModel[];
     availableCards: CardModel[];
     trySelectCard: (card: CardModel) => (e: MouseEvent) => void;
-    tryGuess: (_e: MouseEvent) => void;
+    tryGuess: (_e: UIEvent) => void;
 };
 
 export const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
@@ -60,20 +60,25 @@ export const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
         </div>
 
         <div class={cardContainerCls}>
-            {props.availableCards.map((c) => (
-                <button
-                    class={cardCls}
-                    onClick={props.trySelectCard(c)}
-                    key={c.id}
-                >
-                    {fromBase64(c.content)}
-                </button>
-            ))}
+            {props.availableCards
+                .toSorted(({ position: a }, { position: b }) => a - b)
+                .map((c) => (
+                    <button
+                        class={cardCls}
+                        onClick={props.trySelectCard(c)}
+                        onKeyDown={props.tryGuess}
+                        key={c.id}
+                    >
+                        {fromBase64(c.content)}
+                    </button>
+                ))}
         </div>
 
-        <button type="button" onClick={props.tryGuess} class={submitBtnCls}>
-            Submit
-        </button>
+        {!!props.availableCards.length && (
+            <button type="button" onClick={props.tryGuess} class={submitBtnCls}>
+                Submit
+            </button>
+        )}
     </>
 );
 
