@@ -7,7 +7,7 @@ import { fetchGameState } from "./db";
 
 const app = new Hono();
 
-export const DB = new Database("connections.db", {
+export const DB = new Database("connexions.db", {
     readonly: true,
     strict: true,
 });
