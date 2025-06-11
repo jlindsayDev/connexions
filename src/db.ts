@@ -1,5 +1,7 @@
 import type { Database } from "bun:sqlite";
 import { Dexie, type EntityTable } from "dexie";
+import { exportDB } from "dexie-export-import";
+import download from "downloadjs";
 import {
     type CardModel,
     type CategoryModel,
@@ -153,4 +155,9 @@ export const resetData = (DB: typeof INDEXED_DB): void => {
     if (confirm("Delete all data?")) {
         DB.tables.map(async (t) => await t.clear());
     }
+};
+
+export const exportData = async (DB: typeof INDEXED_DB) => {
+    const blob = await exportDB(DB);
+    download(blob, "connexions.json", "text/json");
 };

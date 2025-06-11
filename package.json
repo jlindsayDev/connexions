@@ -17,6 +17,7 @@
         "@hono/vite-build": "latest",
         "@hono/vite-dev-server": "latest",
         "@types/bun": "latest",
+        "@types/downloadjs": "latest",
         "vite": "npm:rolldown-vite@latest"
     },
     "peerDependencies": {
@@ -24,6 +25,8 @@
     },
     "dependencies": {
         "dexie": "latest",
+        "dexie-export-import": "latest",
+        "downloadjs": "latest",
         "hono": "latest",
         "vite-plugin-pwa": "latest"
     }

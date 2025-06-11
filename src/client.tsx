@@ -5,6 +5,7 @@ import Calendar from "./calendar";
 import {
     addGameState,
     addGuess,
+    exportData,
     getGameState,
     getGuess,
     getGuesses,
@@ -13,7 +14,7 @@ import {
 } from "./db";
 import type { AppType } from "./index";
 import type { CardModel, CategoryModel, GameState } from "./models";
-import { Puzzle as PuzzleElem } from "./puzzle";
+import { Puzzle } from "./puzzle";
 
 const client = hc<AppType>("/");
 
@@ -56,7 +57,7 @@ function App() {
         setAvailableCards(cards);
     };
 
-    const tryGuess = async (_e: MouseEvent): Promise<void> => {
+    const tryGuess = async (_e: UIEvent): Promise<void> => {
         if (!gameState || selectedCards.length !== 4) {
             return;
         }
@@ -145,6 +146,10 @@ function App() {
                 CLEAR THE DATA
             </button>
 
+            <button type="button" onClick={() => exportData(DB)}>
+                EXPORT THE DATA
+            </button>
+
             <hr />
 
             <Calendar
@@ -156,7 +161,7 @@ function App() {
             <hr />
 
             {gameState ? (
-                <PuzzleElem
+                <Puzzle
                     guessedCategories={guessedCategories}
                     availableCards={availableCards}
                     trySelectCard={toggleCard}
