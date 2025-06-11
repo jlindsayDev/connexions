@@ -1,56 +1,17 @@
 import { useState } from "hono/jsx/dom";
-import { css } from "hono/jsx/dom/css";
+import {
+    calendarContainer,
+    calendarGridClass,
+    calendarHeaderClass,
+    gridDayClass,
+    gridEmptyClass,
+} from "./styles";
 
 type CalendarProps = {
     month: number;
     year: number;
     selectDateFn: (date: string) => (_e: MouseEvent) => void;
 };
-
-const container = css`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 0 auto;
-`;
-
-const nav = css`
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 300px;
-    margin-bottom: 10px;
-`;
-
-const grid = css`
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
-`;
-
-const gridDay = css`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    text-decoration: none;
-
-    @media (prefers-color-scheme: light) {
-        color: black;
-        border: 1px solid #ccc;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        color: #ccc;
-        border: 1px solid #555;
-    }
-`;
-
-const gridEmpty = css`
-    background-color: transparent;
-    border: none;
-`;
 
 const Calendar = ({ month, year, selectDateFn }: CalendarProps) => {
     const [currentDate, setCurrentDate] = useState(new Date(year, month));
@@ -69,23 +30,6 @@ const Calendar = ({ month, year, selectDateFn }: CalendarProps) => {
         setCurrentDate(calendarDate);
     };
 
-    const header = (
-        <nav class={nav}>
-            <button type="button" onClick={handlePrevMonth}>
-                &larr;
-            </button>
-
-            <div>
-                {currentDate.toLocaleString("default", { month: "long" })}{" "}
-                {currentDate.getFullYear()}
-            </div>
-
-            <button type="button" onClick={handleNextMonth}>
-                &rarr;
-            </button>
-        </nav>
-    );
-
     const renderDays = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -94,14 +38,17 @@ const Calendar = ({ month, year, selectDateFn }: CalendarProps) => {
         const firstDayIndex = new Date(year, month, 1).getDay();
 
         const days = "M Tu W Th F Sa Su".split(" ").map((day) => (
-            <div key={`header-${day}`} classList={[gridDay, gridEmpty]}>
+            <div key={`header-${day}`} classList={[]}>
                 {day}
             </div>
         ));
 
         for (let i = 0; i < firstDayIndex; i++) {
             const dayElement = (
-                <div key={`empty-${i}`} classList={[gridDay, gridEmpty]} />
+                <div
+                    key={`empty-${i}`}
+                    classList={[gridDayClass, gridEmptyClass]}
+                />
             );
             days.push(dayElement);
         }
@@ -112,7 +59,11 @@ const Calendar = ({ month, year, selectDateFn }: CalendarProps) => {
             const date = `${year}-${monthStr}-${dayStr}`;
 
             const dayElement = (
-                <button key={date} onClick={selectDateFn(date)} class={gridDay}>
+                <button
+                    key={date}
+                    onClick={selectDateFn(date)}
+                    class={gridDayClass}
+                >
                     {i}
                 </button>
             );
@@ -123,10 +74,23 @@ const Calendar = ({ month, year, selectDateFn }: CalendarProps) => {
     };
 
     return (
-        <div class={container}>
-            {header}
+        <div class={calendarContainer}>
+            <nav class={calendarHeaderClass}>
+                <button type="button" onClick={handlePrevMonth}>
+                    &larr;
+                </button>
 
-            <div class={grid}>{renderDays()}</div>
+                <span>
+                    {currentDate.toLocaleString("default", { month: "long" })}{" "}
+                    {currentDate.getFullYear()}
+                </span>
+
+                <button type="button" onClick={handleNextMonth}>
+                    &rarr;
+                </button>
+            </nav>
+
+            <div class={calendarGridClass}>{renderDays()}</div>
         </div>
     );
 };
