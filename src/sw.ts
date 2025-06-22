@@ -7,4 +7,4 @@ const app = new Hono().basePath("/sw");
 app.get("/", (c) => c.text("Hello World"));
 app.get("/ping", (c) => c.text("pong"));
 
-self.addEventListener("fetch", (e: FetchEvent) => handle(app)(e));
+self.addEventListener("fetch", (_e: FetchEvent) => handle(app, {}));
