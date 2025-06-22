@@ -115,6 +115,7 @@ export const cardClass = css`
     transition: 250ms ease all;
 
     &.selected {
+        color: rgb(0,0,0);
         background-color: blanchedalmond;
     }
 `;
