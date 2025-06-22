@@ -1,7 +1,8 @@
 import { hc } from "hono/client";
 import { useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
-import Calendar from "./calendar";
+import Calendar from "./components/calendar";
+import Puzzle from "./components/puzzle";
 import {
     addGameState,
     addGuess,
@@ -14,7 +15,6 @@ import {
 } from "./db";
 import type { AppType } from "./index";
 import type { CardModel, CategoryModel, GameState } from "./models";
-import { Puzzle } from "./puzzle";
 
 const client = hc<AppType>("/");
 

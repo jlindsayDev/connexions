@@ -1,11 +1,11 @@
-import { useState } from "hono/jsx/dom";
+import { type FC, useState } from "hono/jsx/dom";
 import {
     calendarContainer,
     calendarGridClass,
     calendarHeaderClass,
     gridDayClass,
     gridEmptyClass,
-} from "./styles";
+} from "../styles";
 
 type CalendarProps = {
     month: number;
@@ -13,8 +13,10 @@ type CalendarProps = {
     selectDateFn: (date: string) => (_e: MouseEvent) => void;
 };
 
-const Calendar = ({ month, year, selectDateFn }: CalendarProps) => {
-    const [currentDate, setCurrentDate] = useState(new Date(year, month));
+const Calendar: FC<CalendarProps> = (props: CalendarProps) => {
+    const [currentDate, setCurrentDate] = useState(
+        new Date(props.year, props.month),
+    );
 
     const handlePrevMonth = (_e: MouseEvent) => {
         const calendarDate = new Date(
@@ -61,7 +63,7 @@ const Calendar = ({ month, year, selectDateFn }: CalendarProps) => {
             const dayElement = (
                 <button
                     key={date}
-                    onClick={selectDateFn(date)}
+                    onClick={props.selectDateFn(date)}
                     class={gridDayClass}
                 >
                     {i}

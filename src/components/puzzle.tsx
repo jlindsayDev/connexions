@@ -1,12 +1,12 @@
-import type { FC } from "hono/jsx";
-import type { CardModel, CategoryModel } from "./models";
+import type { FC } from "hono/jsx/dom";
+import type { CardModel, CategoryModel } from "../models";
 import {
     cardClass,
     cardGridClass,
     categoryGridClass,
     submitBtnCls,
-} from "./styles";
-import { fromBase64 } from "./utils";
+} from "../styles";
+import { fromBase64 } from "../utils";
 
 type PuzzleProps = {
     guessedCategories: CategoryModel[];
@@ -15,7 +15,7 @@ type PuzzleProps = {
     tryGuess: (_e: UIEvent) => void;
 };
 
-export const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
+const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
     <>
         <div class={categoryGridClass}>
             {props.guessedCategories.map((c, i) => (
