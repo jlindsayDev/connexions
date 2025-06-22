@@ -10,7 +10,7 @@
     "private": true,
     "scripts": {
         "dev": "bunx --bun vite dev --host",
-        "build": "bunx --bun vite build --mode client && bunx --bun vite build"
+        "build": "bunx --bun vite build --mode client && bunx --bun vite build && bunx --bun vite build --mode sw"
     },
     "devDependencies": {
         "@biomejs/biome": "2.0.0-beta.5",
