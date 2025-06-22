@@ -1,49 +1,25 @@
-# connexions
+# Connexions
 
-Typical `honox` project structure ([link](https://github.com/honojs/honox#project-structure))
+## TODO
 
-```
-.
-├── app
-│   ├── global.d.ts // global type definitions
-│   ├── routes
-│   │   ├── _404.tsx // not found page
-│   │   ├── _error.tsx // error page
-│   │   ├── _renderer.tsx // renderer definition
-│   │   ├── merch
-│   │   │   └── [...slug].tsx // matches `/merch/:category`, `/merch/:category/:item`, `/merch/:category/:item/:variant`
-│   │   ├── about
-│   │   │   └── [name].tsx // matches `/about/:name`
-│   │   ├── blog
-│   │   │   ├── index.tsx // matches /blog
-│   │   │   └── (content)
-│   │   │       ├── _renderer.tsx // renderer definition for routes inside this directory
-│   │   │       └── [name].tsx    // matches `/blog/:name`
-│   │   └── index.tsx // matches `/`
-│   └── server.ts // server entry file
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
-```
+- [ ] Fetch from source (might require SW because of CORS)
+- [ ] Export/Import IndexedDB
+- [ ] Service Worker for full Progressive Web App installation
+- [ ] Play statistics?
 
-client side ([link](https://github.com/honojs/honox#get-started---with-client))
+## What have I learned?
 
-```
-.
-├── app
-│   ├── client.ts // client entry file
-│   ├── global.d.ts
-│   ├── islands
-│   │   └── counter.tsx // island component
-│   ├── routes
-│   │   ├── _renderer.tsx
-│   │   └── index.tsx
-│   └── server.ts
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
-```
+- DevContainer setup
+- How to set up a single page application
+  - Bun (Nodejs)
+  - Biome (linter/formatter)
+  - Typescript
+  - Rollup/Rolldown: bundling
+- Benefits and tradeoffs of front-end frameworks
+  - Struggles with trying to make HonoX do what I want
+- The importance of stateless components
 
-Using Biome as linter/formatter
 
-Using Preact as Renderer
+## My Mental Thought Process
+- I want bleeding edge libraries of things I don't understand or know if they'll even be useful.
+- Why was I insisting on making HonoX do things it wasn't built to do?
