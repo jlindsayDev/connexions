@@ -33,12 +33,6 @@ app.get("/", (c) => {
         <script type="module" src="/src/client.tsx" />
     );
 
-    const swScript = import.meta.env["PROD"] ? (
-        <script type="module" src="/static/main.js" />
-    ) : (
-        <script type="module" src="/src/main.tsx" />
-    );
-
     return c.html(
         <>
             {html`<!DOCTYPE html>`}
@@ -50,7 +44,6 @@ app.get("/", (c) => {
                         name="viewport"
                     />
                     {clientScript}
-                    {swScript}
                     <Style>{bodyCss}</Style>
                 </head>
                 <body>

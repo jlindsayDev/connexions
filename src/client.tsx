@@ -13,10 +13,13 @@ import {
     INDEXED_DB,
     resetData,
 } from "./db";
+import { requestNotificationPermission } from "./features";
 import type { AppType } from "./index";
 import type { CardModel, CategoryModel, GameState } from "./models";
+import type { ServiceWorkerType } from "./sw";
 
 const client = hc<AppType>("/");
+const sw = hc<ServiceWorkerType>("/sw");
 
 const DB = INDEXED_DB;
 
@@ -150,6 +153,14 @@ function App() {
                 EXPORT THE DATA
             </button>
 
+            <button type="button" onClick={requestNotificationPermission}>
+                NOTIFICATIONS
+            </button>
+
+            <button type="button" onClick={() => {}}>
+                SOMETHING
+            </button>
+
             <hr />
 
             <Calendar
@@ -176,3 +187,23 @@ function App() {
 
 const root = document.getElementById("root")!;
 render(<App />, root);
+
+const startServiceWorkerRegistration = async () => {
+    if (!import.meta.env["PROD"]) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+            console.log(`Unregistering Service Worker: ${registration}`);
+            registration.unregister();
+        }
+    }
+
+    console.log("Registering new service worker");
+    await navigator.serviceWorker.register("/sw.js", {
+        scope: "/",
+        type: "module",
+    });
+};
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", startServiceWorkerRegistration);
+}
