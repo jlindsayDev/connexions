@@ -13,9 +13,10 @@ import {
     INDEXED_DB,
     resetData,
 } from "./db";
-import { requestNotificationPermission } from "./features";
+import { requestNotifications } from "./features";
 import type { AppType } from "./index";
 import type { CardModel, CategoryModel, GameState } from "./models";
+import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
 import type { ServiceWorkerType } from "./sw";
 
 const client = hc<AppType>("/");
@@ -128,7 +129,7 @@ function App() {
         }
     };
 
-    const toggleCard =
+    const tryToggleCard =
         (card: CardModel) =>
         (e: MouseEvent): void => {
             const target = e.target as HTMLButtonElement;
@@ -144,44 +145,42 @@ function App() {
 
     const date = new Date();
     return (
-        <>
-            <button type="button" onClick={() => resetData(DB)}>
-                CLEAR THE DATA
-            </button>
-
-            <button type="button" onClick={() => exportData(DB)}>
-                EXPORT THE DATA
-            </button>
-
-            <button type="button" onClick={requestNotificationPermission}>
-                NOTIFICATIONS
-            </button>
-
-            <button type="button" onClick={() => {}}>
-                SOMETHING
-            </button>
-
-            <hr />
-
-            <Calendar
-                month={date.getMonth()}
-                year={date.getFullYear()}
-                selectDateFn={handleDateChange}
-            />
-
-            <hr />
-
-            {gameState ? (
-                <Puzzle
-                    guessedCategories={guessedCategories}
-                    availableCards={availableCards}
-                    trySelectCard={toggleCard}
-                    tryGuess={tryGuess}
+        <div class={flexContainer}>
+            <div class={flexContainerItem}>
+                <Calendar
+                    month={date.getMonth()}
+                    year={date.getFullYear()}
+                    selectDateFn={handleDateChange}
                 />
-            ) : (
-                <></>
+
+                <div class={buttonGridClass}>
+                    <button type="button" onClick={() => resetData(DB)}>
+                        CLEAR THE DATA
+                    </button>
+
+                    <button type="button" onClick={() => exportData(DB)}>
+                        EXPORT THE DATA
+                    </button>
+
+                    {Notification?.permission !== "granted" && (
+                        <button type="button" onClick={requestNotifications}>
+                            NOTIFICATIONS
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {gameState && (
+                <div class={flexContainerItem}>
+                    <Puzzle
+                        guessedCategories={guessedCategories}
+                        availableCards={availableCards}
+                        selectCardFn={tryToggleCard}
+                        guessFn={tryGuess}
+                    />
+                </div>
             )}
-        </>
+        </div>
     );
 }
 

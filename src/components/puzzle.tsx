@@ -1,22 +1,23 @@
 import type { FC } from "hono/jsx/dom";
 import type { CardModel, CategoryModel } from "../models";
 import {
+    buttonGridClass,
     cardClass,
     cardGridClass,
     categoryGridClass,
-    submitBtnCls,
+    puzzleContainerClass,
 } from "../styles";
 import { fromBase64 } from "../utils";
 
 type PuzzleProps = {
     guessedCategories: CategoryModel[];
     availableCards: CardModel[];
-    trySelectCard: (card: CardModel) => (e: MouseEvent) => void;
-    tryGuess: (_e: UIEvent) => void;
+    selectCardFn: (card: CardModel) => (e: MouseEvent) => void;
+    guessFn: (_e: UIEvent) => void;
 };
 
 const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
-    <>
+    <div class={puzzleContainerClass}>
         <div class={categoryGridClass}>
             {props.guessedCategories.map((c, i) => (
                 <div class={`category-${c.difficulty}`} key={i}>
@@ -32,8 +33,8 @@ const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
                 .map((c) => (
                     <button
                         class={cardClass}
-                        onClick={props.trySelectCard(c)}
-                        onKeyDown={props.tryGuess}
+                        onClick={props.selectCardFn(c)}
+                        onKeyDown={props.guessFn}
                         key={c.id}
                     >
                         {fromBase64(c.content)}
@@ -41,12 +42,14 @@ const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
                 ))}
         </div>
 
-        {!!props.availableCards.length && (
-            <button type="button" onClick={props.tryGuess} class={submitBtnCls}>
-                Submit
-            </button>
-        )}
-    </>
+        <div class={buttonGridClass}>
+            {props.availableCards.length > 0 && (
+                <button type="button" onClick={props.guessFn}>
+                    Guess
+                </button>
+            )}
+        </div>
+    </div>
 );
 
 export default Puzzle;

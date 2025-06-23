@@ -1,28 +1,15 @@
 import { Database } from "bun:sqlite";
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
-import { css, Style } from "hono/css";
+import { Style } from "hono/css";
 import { html } from "hono/html";
 import { fetchGameState } from "./db";
+import { bodyCss } from "./styles";
 
 export const DB = new Database("connexions.db", {
     readonly: true,
     strict: true,
 });
-
-const bodyCss = css`
-    body {
-        @media (prefers-color-scheme: light) {
-            color: black;
-            background-color: #CCC;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            color: #EEE;
-            background-color: #222;
-        }
-    }
-`;
 
 const app = new Hono();
 app.use("/favicon.ico", serveStatic({ path: "./public/favicon.ico" }));

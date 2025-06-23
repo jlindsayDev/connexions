@@ -1,25 +1,68 @@
+import { css as czz } from "hono/css";
 import { css } from "hono/jsx/dom/css";
 
-export const calendarContainer = css`
+export const bodyCss = czz`
+    body {
+        margin: 0;
+        padding: 0;
+
+        @media (prefers-color-scheme: light) {
+            color: black;
+            background-color: #CCC;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            color: #EEE;
+            background-color: #222;
+        }
+    }
+`;
+
+export const flexContainer = css`
     display: flex;
+    height: 100vh;
+`;
+
+export const flexContainerItem = css`
+    display: flex;
+    flex-direction: column;
+    margin: auto auto;
+    align-items: center;
+    align-content: center;
+    max-height: 80vh;
+    max-width: 40vw;
+`;
+
+export const calendarContainer = css`
+    /* display: flex;
     flex-direction: column;
     align-items: center;
     margin: 0 auto;
+    align-self: flex-start; */
+`;
+
+export const puzzleContainerClass = css`
+    /* display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 500px; */
+`;
+
+export const buttonGridClass = css`
+    display: flex;
 `;
 
 export const calendarHeaderClass = css`
     display: flex;
     justify-content: space-between;
     width: 100%;
-    max-width: 300px;
     margin-bottom: 1rem;
 
     span {
         font-size: 2rem;
     }
 
-    /* @media (prefers-color-scheme: light) {} */
-    & button {
+    button {
         width: 2rem;
 
         @media (prefers-color-scheme: dark) {
@@ -43,9 +86,9 @@ export const calendarGridClass = css`
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 0.5rem;
+    margin-bottom: 1rem;
 
     & ${gridDayClass} {
-        /* @media (prefers-color-scheme: light) {} */
         @media (prefers-color-scheme: dark) {
             color: rgb(196, 196, 196);
             background-color: rgb(77, 77, 77);
@@ -55,7 +98,6 @@ export const calendarGridClass = css`
 `;
 
 export const gridHeaderClass = css`
-    /* @media (prefers-color-scheme: light) {} */
     @media (prefers-color-scheme: dark) {
         color: rgb(196, 196, 196);
         background-color: rgb(93, 37, 37) !important;
@@ -67,9 +109,9 @@ export const gridEmptyClass = css`
 `;
 
 export const categoryGridClass = css`
-    gap: 8px;
     display: grid;
-    margin-bottom: 8px;
+    gap: 1vw;
+    margin-bottom: 1vw;
 
     @media (prefers-color-scheme: light) {
         & .category-0 { background-color: rgb(84, 146, 255); }
@@ -87,14 +129,10 @@ export const categoryGridClass = css`
 `;
 
 export const cardGridClass = css`
-    width: 100%;
-    max-width: 600px;
     display: grid;
     gap: 1vw;
-    justify-content: space-evenly;
     grid-template-columns: repeat(4, minmax(0, 1fr));
 
-    /* @media (prefers-color-scheme: light) {} */
     @media (prefers-color-scheme: dark) {
         & button {
             color: rgb(196, 196, 196);
@@ -105,19 +143,15 @@ export const cardGridClass = css`
 `;
 
 export const cardClass = css`
-    padding: 3rem 0rem;
+    padding: 25% 0rem;
     font-weight: bold;
     font-size: 0.8rem;
 
     word-wrap: break-word;
     word-break: break-word;
 
-    transition: 250ms ease all;
-
     &.selected {
         color: rgb(0,0,0);
         background-color: blanchedalmond;
     }
 `;
-
-export const submitBtnCls = css``;
