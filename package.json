@@ -10,7 +10,9 @@
     "private": true,
     "scripts": {
         "dev": "bunx --bun vite dev --host",
-        "build": "bunx --bun vite build --mode client && bunx --bun vite build && bunx --bun vite build --mode sw"
+        "build": "bunx --bun vite build",
+        "zzzbuild": "bunx --bun vite build --mode client && bunx --bun vite build && bunx --bun vite build --mode sw",
+        "bunbuild": "bun build ./src/client.tsx ./src/sw.ts --outdir dist"
     },
     "devDependencies": {
         "@biomejs/biome": "2.0.0-beta.5",
@@ -27,7 +29,6 @@
         "dexie": "latest",
         "dexie-export-import": "latest",
         "downloadjs": "latest",
-        "hono": "latest",
-        "vite-plugin-pwa": "latest"
+        "hono": "latest"
     }
 }
