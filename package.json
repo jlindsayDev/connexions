@@ -27,7 +27,6 @@
         "dexie": "latest",
         "dexie-export-import": "latest",
         "downloadjs": "latest",
-        "hono": "latest",
-        "vite-plugin-pwa": "latest"
+        "hono": "latest"
     }
 }
