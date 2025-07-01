@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charSet="utf-8" />
+    <meta
+        content="width=device-width, initial-scale=1"
+        name="viewport"
+    />
+    <link rel="manifest" href="manifest.json" />
+    <script type="module" src="client.tsx"></script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="module">
+        if ("serviceWorker" in navigator) {
+            const sw = navigator.serviceWorker;
+            window.addEventListener("load", async () => {
+                (await sw.getRegistrations()).forEach((r) => r.unregister());
+                await sw.register("/sw.ts", {scope: "/", type: "module"});
+            });
+        }
+    </script>
+</body>
+
+</html>
