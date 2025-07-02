@@ -2,21 +2,10 @@ import { useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import Calendar from "./components/calendar";
 import Puzzle from "./components/puzzle";
-import {
-    addGameState,
-    addGuess,
-    exportData,
-    getGameState,
-    getGuess,
-    getGuesses,
-    INDEXED_DB,
-    resetData,
-} from "./db";
+import * as db from "./db";
 import type { CardModel, CategoryModel, GameState } from "./models";
 import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
 import { requestNotifications } from "./utils";
-
-const DB = INDEXED_DB;
 
 function App() {
     const [gameState, setGameState] = useState<GameState | null>(null);
@@ -33,7 +22,7 @@ function App() {
         const categories: CategoryModel[] = [];
         let cards: CardModel[] = [...gameState.cards];
 
-        const guesses = await getGuesses(DB, gameState.puzzle);
+        const guesses = await db.getGuesses(gameState.puzzle);
         guesses
             .filter(({ category_id }) => category_id)
             .forEach(({ category_id: guessCategoryId }) => {
@@ -65,7 +54,7 @@ function App() {
             .sort()
             .join(",");
 
-        const alreadyGuessed = await getGuess(DB, gameState.puzzle, guessStr);
+        const alreadyGuessed = await db.getGuess(gameState.puzzle, guessStr);
         if (alreadyGuessed) {
             console.error(
                 `Already tried WRONG guess: puzzle=${gameState.puzzle.id} ${guessStr}`,
@@ -80,7 +69,7 @@ function App() {
 
         if (!correctGuess) {
             console.error("INCORRECT");
-            await addGuess(DB, gameState.puzzle, guessStr);
+            await db.addGuess(gameState.puzzle, guessStr);
             return;
         }
 
@@ -88,7 +77,7 @@ function App() {
             ({ id }) => categoryId == id,
         );
         if (guessedCategory) {
-            await addGuess(DB, gameState.puzzle, guessStr, categoryId);
+            await db.addGuess(gameState.puzzle, guessStr, categoryId);
 
             setGuessedCategories((categories) => [
                 ...categories,
@@ -102,7 +91,7 @@ function App() {
     };
 
     const handleDateChange = (date: string) => async (_e: MouseEvent) => {
-        let gameState = await getGameState(DB, date);
+        let gameState = await db.getGameState(date);
         if (gameState) {
             await initializeGame(gameState);
             return;
@@ -118,7 +107,7 @@ function App() {
 
         gameState = await apiResponse.json();
         if (gameState) {
-            await addGameState(DB, gameState);
+            await db.addGameState(gameState);
             await initializeGame(gameState);
         }
     };
@@ -148,11 +137,11 @@ function App() {
                 />
 
                 <div class={buttonGridClass}>
-                    <button type="button" onClick={() => resetData(DB)}>
+                    <button type="button" onClick={() => db.resetData()}>
                         CLEAR THE DATA
                     </button>
 
-                    <button type="button" onClick={() => exportData(DB)}>
+                    <button type="button" onClick={() => db.exportData()}>
                         EXPORT THE DATA
                     </button>
 

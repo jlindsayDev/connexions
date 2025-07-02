@@ -12,11 +12,11 @@ export default defineConfig((_configEng: ConfigEnv) => {
         },
         plugins: [
             build({
-                entry: "index.tsx",
+                entry: "src/index.tsx",
                 minify: false,
             }),
             devServer({
-                entry: "index.tsx",
+                entry: "src/index.tsx",
             }),
         ],
     };

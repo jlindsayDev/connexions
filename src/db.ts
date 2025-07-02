@@ -75,27 +75,28 @@ INDEXED_DB.version(2).stores({
 });
 
 export const getGameState = async (
-    DB: typeof INDEXED_DB,
     print_date: string,
 ): Promise<GameState | null> => {
-    const puzzle = await DB.puzzles.get({ print_date });
+    const puzzle = await INDEXED_DB.puzzles.get({ print_date });
     if (!puzzle) {
         return null;
     }
-
-    const cards = await DB.cards.where({ puzzle_id: puzzle.id }).toArray();
-    const categories = await DB.categories
+    const cards = await INDEXED_DB.cards
+        .where({ puzzle_id: puzzle.id })
+        .toArray();
+    const categories = await INDEXED_DB.categories
         .where({ puzzle_id: puzzle.id })
         .toArray();
 
     return { puzzle, cards, categories };
 };
 
-export const addGameState = async (
-    DB: typeof INDEXED_DB,
-    { puzzle, cards, categories }: GameState,
-): Promise<boolean> => {
-    const puzzle_id = await DB.puzzles.add({
+export const addGameState = async ({
+    puzzle,
+    cards,
+    categories,
+}: GameState): Promise<boolean> => {
+    const puzzle_id = await INDEXED_DB.puzzles.add({
         ...puzzle,
         status: PuzzleStatus.NotAttempted,
     });
@@ -105,59 +106,52 @@ export const addGameState = async (
     const categoryRecords = categories.map((c) => ({ ...c, puzzle_id }));
 
     categoryRecords.forEach(async (category) => {
-        const category_id = await DB.categories.add(category);
+        const category_id = await INDEXED_DB.categories.add(category);
         const categoryCards =
             cardMapping.get(category.id)?.map((c) => ({
                 ...c,
                 category_id,
                 puzzle_id,
             })) ?? [];
-        await DB.cards.bulkAdd(categoryCards);
+        await INDEXED_DB.cards.bulkAdd(categoryCards);
     });
 
     return true;
 };
 
 export const addGuess = async (
-    DB: typeof INDEXED_DB,
     { id: puzzle_id }: PuzzleModel,
     guess: string,
     category_id: number | null = null,
 ): Promise<GuessModel> => {
-    const guess_id = await DB.guesses.add({
+    const guess_id = await INDEXED_DB.guesses.add({
         puzzle_id,
         category_id,
         guess,
     });
-    const guessModel = await DB.guesses.get(guess_id);
-    if (!guessModel) {
-        throw `Guess somehow did not insert: puzzle_id=${puzzle_id} guess=${guess}`;
-    }
-    return guessModel;
+    return (await INDEXED_DB.guesses.get(guess_id))!;
 };
 
 export const getGuess = async (
-    DB: typeof INDEXED_DB,
     { id: puzzle_id }: PuzzleModel,
     guess: string,
 ): Promise<GuessModel | undefined> => {
-    return await DB.guesses.where({ puzzle_id, guess }).first();
+    return await INDEXED_DB.guesses.where({ puzzle_id, guess }).first();
 };
 
-export const getGuesses = async (
-    DB: typeof INDEXED_DB,
-    { id: puzzle_id }: PuzzleModel,
-): Promise<GuessModel[]> => {
-    return await DB.guesses.where({ puzzle_id }).toArray();
+export const getGuesses = async ({
+    id: puzzle_id,
+}: PuzzleModel): Promise<GuessModel[]> => {
+    return await INDEXED_DB.guesses.where({ puzzle_id }).toArray();
 };
 
-export const resetData = (DB: typeof INDEXED_DB): void => {
+export const resetData = (): void => {
     if (confirm("Delete all data?")) {
-        DB.tables.map(async (t) => await t.clear());
+        INDEXED_DB.tables.map(async (t) => await t.clear());
     }
 };
 
-export const exportData = async (DB: typeof INDEXED_DB) => {
-    const blob = await exportDB(DB);
+export const exportData = async () => {
+    const blob = await exportDB(INDEXED_DB);
     download(blob, "connexions.json", "text/json");
 };
