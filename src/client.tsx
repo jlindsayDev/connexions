@@ -1,4 +1,3 @@
-import { hc } from "hono/client";
 import { useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import Calendar from "./components/calendar";
@@ -13,14 +12,9 @@ import {
     INDEXED_DB,
     resetData,
 } from "./db";
-import { requestNotifications } from "./features";
-import type { AppType } from "./index";
 import type { CardModel, CategoryModel, GameState } from "./models";
 import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
-import type { ServiceWorkerType } from "./sw";
-
-const client = hc<AppType>("/");
-const sw = hc<ServiceWorkerType>("/sw");
+import { requestNotifications } from "./utils";
 
 const DB = INDEXED_DB;
 
@@ -186,23 +180,3 @@ function App() {
 
 const root = document.getElementById("root")!;
 render(<App />, root);
-
-const startServiceWorkerRegistration = async () => {
-    if (!import.meta.env["PROD"]) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-            console.log(`Unregistering Service Worker: ${registration}`);
-            registration.unregister();
-        }
-    }
-
-    console.log("Registering new service worker");
-    await navigator.serviceWorker.register("/sw.js", {
-        scope: "/",
-        type: "module",
-    });
-};
-
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", startServiceWorkerRegistration);
-}

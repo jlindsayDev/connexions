@@ -1,26 +1,10 @@
-import { Database } from "bun:sqlite";
 import { Hono } from "hono";
-import { serveStatic } from "hono/bun";
 import { Style } from "hono/css";
 import { html } from "hono/html";
-import { fetchGameState } from "./db";
 import { bodyCss } from "./styles";
 
-export const DB = new Database("connexions.db", {
-    readonly: true,
-    strict: true,
-});
-
-const app = new Hono();
-app.use("/favicon.ico", serveStatic({ path: "./public/favicon.ico" }));
-app.get("/", (c) => {
-    const clientScript = import.meta.env["PROD"] ? (
-        <script type="module" src="/static/client.js" />
-    ) : (
-        <script type="module" src="/src/client.tsx" />
-    );
-
-    return c.html(
+export default new Hono().get("/", (c) =>
+    c.html(
         <>
             {html`<!DOCTYPE html>`}
             <html lang="en">
@@ -30,29 +14,13 @@ app.get("/", (c) => {
                         content="width=device-width, initial-scale=1"
                         name="viewport"
                     />
-                    {clientScript}
                     <Style>{bodyCss}</Style>
                 </head>
                 <body>
                     <div id="root" />
+                    <script type="module" src="/src/client.tsx" />
                 </body>
             </html>
         </>,
-    );
-});
-
-const apiRoutes = app.get("/api/puzzle/:date", async (c) => {
-    const date = c.req.param("date");
-
-    try {
-        return c.json(fetchGameState(DB, date));
-    } catch (e) {
-        // const url = `https://www.nytimes.com/svc/connections/v2/${date}.json`;
-        // const json = await (await fetch(url)).json();
-        // const gameState = parseSourceJson(json);
-        return c.json({ ok: false, message: `${e}` }, 404);
-    }
-});
-export type AppType = typeof apiRoutes;
-
-export default app;
+    ),
+);
