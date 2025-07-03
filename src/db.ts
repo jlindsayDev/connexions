@@ -194,13 +194,15 @@ export const resetData = (): void => {
 };
 
 export const exportData = async () => {
-    let blob = await exportDB(INDEXED_DB, {
+    const dateStr = new Date().toISOString().substring(0, 10);
+
+    let blob = await exportDB(INDEXED_DB, { skipTables: ["guesses"] });
+    download(blob, `connexions-${dateStr}.json`, "text/json");
+
+    blob = await exportDB(INDEXED_DB, {
         skipTables: ["puzzles", "categories", "cards"],
     });
-    download(blob, "connexions.json", "text/json");
-
-    blob = await exportDB(INDEXED_DB, { skipTables: ["guesses"] });
-    download(blob, "guesses.json", "text/json");
+    download(blob, `guesses-${dateStr}.json`, "text/json");
 };
 
 const download = async (blob: Blob, filename: string, mimetype: string) => {
