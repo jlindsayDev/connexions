@@ -1,7 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { Dexie, type EntityTable } from "dexie";
 import { exportDB } from "dexie-export-import";
-import download from "downloadjs";
 import {
     type CardModel,
     type CategoryModel,
@@ -195,6 +194,25 @@ export const resetData = (): void => {
 };
 
 export const exportData = async () => {
-    const blob = await exportDB(INDEXED_DB);
+    let blob = await exportDB(INDEXED_DB, {
+        skipTables: ["puzzles", "categories", "cards"],
+    });
     download(blob, "connexions.json", "text/json");
+
+    blob = await exportDB(INDEXED_DB, { skipTables: ["guesses"] });
+    download(blob, "guesses.json", "text/json");
+};
+
+const download = async (blob: Blob, filename: string, mimetype: string) => {
+    const blobUrl: string = URL.createObjectURL(blob);
+
+    const aElem: HTMLAnchorElement = document.createElement("a");
+    aElem.href = blobUrl;
+    aElem.download = filename;
+    aElem.type = mimetype;
+
+    document.body.appendChild(aElem);
+    aElem.click();
+    document.body.removeChild(aElem);
+    URL.revokeObjectURL(blobUrl);
 };
