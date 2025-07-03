@@ -110,7 +110,7 @@ export const addStateFromJson = async (
             hint_card_id: null,
         };
         const category_id = await INDEXED_DB.categories.add(categoryAttrs);
-        const category = { ...categoryAttrs, id: category_id } as CategoryModel;
+        const category: CategoryModel = { ...categoryAttrs, id: category_id };
 
         const cardPromises = categoryJson.cards.map(async (cardJson) => {
             const cardAttrs = {
@@ -120,7 +120,8 @@ export const addStateFromJson = async (
                 category_id,
             };
             const card_id = await INDEXED_DB.cards.add(cardAttrs);
-            return { ...cardAttrs, id: card_id } as CardModel;
+            const card: CardModel = { ...cardAttrs, id: card_id };
+            return card;
         });
 
         return { category, cards: await Promise.all(cardPromises) };
@@ -130,7 +131,8 @@ export const addStateFromJson = async (
     const categories: CategoryModel[] = pairs.map(({ category }) => category);
     const cards: CardModel[] = pairs.flatMap(({ cards }) => cards);
 
-    return { puzzle, categories, cards } as GameState;
+    const gameState: GameState = { puzzle, categories, cards };
+    return gameState;
 };
 
 export const addGameState = async ({
