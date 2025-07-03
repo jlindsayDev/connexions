@@ -2,7 +2,6 @@ export enum PuzzleStatus {
     NotAttempted = 0,
     Attempted = 1,
     Solved = 2,
-    New = 3,
 }
 
 export type PuzzleResponseModel = {
@@ -25,7 +24,7 @@ export type PuzzleResponseModel = {
 export type PuzzleModel = {
     id: number;
     print_date: string;
-    status: PuzzleStatus | null;
+    status: PuzzleStatus;
 };
 
 export type CategoryModel = {
@@ -33,7 +32,6 @@ export type CategoryModel = {
     puzzle_id: number;
     difficulty: number;
     category: string;
-    hint_card_id: number | null;
 };
 
 export type CardModel = {
