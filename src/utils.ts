@@ -9,6 +9,8 @@ export const requestNotifications = async (e: MouseEvent) => {
     }
 };
 
+export const pad = (i: number): string => i.toString().padStart(2, "0");
+
 export const partition = (
     arr: Array<any>,
     partitionFn: (arg0: any) => boolean,

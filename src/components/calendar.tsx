@@ -6,6 +6,7 @@ import {
     gridDayClass,
     gridEmptyClass,
 } from "../styles";
+import { pad } from "../utils";
 
 type CalendarProps = {
     month: number;
@@ -56,9 +57,7 @@ const Calendar: FC<CalendarProps> = (props: CalendarProps) => {
         }
 
         for (let i = 1; i <= daysInMonth; i++) {
-            const monthStr = (month + 1).toString().padStart(2, "0");
-            const dayStr = i.toString().padStart(2, "0");
-            const date = `${year}-${monthStr}-${dayStr}`;
+            const date = `${year}-${pad(month + 1)}-${pad(i)}`;
 
             const dayElement = (
                 <button
