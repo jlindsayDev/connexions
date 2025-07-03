@@ -8,6 +8,7 @@ import {
     type GameState,
     type GuessModel,
     type PuzzleModel,
+    type PuzzleResponseModel,
     PuzzleStatus,
 } from "./models";
 import { toBase64 } from "./utils";
@@ -91,6 +92,47 @@ export const getGameState = async (
     return { puzzle, cards, categories };
 };
 
+export const addStateFromJson = async (
+    json: PuzzleResponseModel,
+): Promise<GameState> => {
+    const puzzleAttrs = {
+        print_date: json.print_date,
+        status: PuzzleStatus.NotAttempted,
+    };
+    const puzzle_id = await INDEXED_DB.puzzles.add(puzzleAttrs);
+    const puzzle: PuzzleModel = { ...puzzleAttrs, id: puzzle_id };
+
+    const categoryPromises = json.categories.map(async (categoryJson, i) => {
+        const categoryAttrs = {
+            puzzle_id,
+            difficulty: i,
+            category: toBase64(categoryJson.title),
+            hint_card_id: null,
+        };
+        const category_id = await INDEXED_DB.categories.add(categoryAttrs);
+        const category = { ...categoryAttrs, id: category_id } as CategoryModel;
+
+        const cardPromises = categoryJson.cards.map(async (cardJson) => {
+            const cardAttrs = {
+                position: cardJson.position,
+                content: toBase64(cardJson.content),
+                puzzle_id,
+                category_id,
+            };
+            const card_id = await INDEXED_DB.cards.add(cardAttrs);
+            return { ...cardAttrs, id: card_id } as CardModel;
+        });
+
+        return { category, cards: await Promise.all(cardPromises) };
+    });
+
+    const pairs = await Promise.all(categoryPromises);
+    const categories: CategoryModel[] = pairs.map(({ category }) => category);
+    const cards: CardModel[] = pairs.flatMap(({ cards }) => cards);
+
+    return { puzzle, categories, cards } as GameState;
+};
+
 export const addGameState = async ({
     puzzle,
     cards,
@@ -107,12 +149,11 @@ export const addGameState = async ({
 
     categoryRecords.forEach(async (category) => {
         const category_id = await INDEXED_DB.categories.add(category);
-        const categoryCards =
-            cardMapping.get(category.id)?.map((c) => ({
-                ...c,
-                category_id,
-                puzzle_id,
-            })) ?? [];
+        const categoryCards = cardMapping.get(category.id)!.map((c) => ({
+            ...c,
+            category_id,
+            puzzle_id,
+        }));
         await INDEXED_DB.cards.bulkAdd(categoryCards);
     });
 

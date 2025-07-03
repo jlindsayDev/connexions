@@ -3,7 +3,12 @@ import { render } from "hono/jsx/dom";
 import Calendar from "./components/calendar";
 import Puzzle from "./components/puzzle";
 import * as db from "./db";
-import type { CardModel, CategoryModel, GameState } from "./models";
+import type {
+    CardModel,
+    CategoryModel,
+    GameState,
+    PuzzleResponseModel,
+} from "./models";
 import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
 import { requestNotifications } from "./utils";
 
@@ -90,25 +95,27 @@ function App() {
         }
     };
 
+    const fetchGameState = async (date: string): Promise<GameState> => {
+        const response = await fetch(`/puzzle/${date}`);
+        const jsonData = (await response.json()) as PuzzleResponseModel;
+        return db.addStateFromJson(jsonData);
+    };
+
     const handleDateChange = (date: string) => async (_e: MouseEvent) => {
         let gameState = await db.getGameState(date);
         if (gameState) {
             await initializeGame(gameState);
-            return;
+            return true;
         }
 
-        const apiResponse = await client.api.puzzle[":date"].$get({
-            param: { date },
-        });
-        if (!apiResponse.ok) {
-            setGameState(null);
-            return;
-        }
-
-        gameState = await apiResponse.json();
-        if (gameState) {
-            await db.addGameState(gameState);
+        try {
+            gameState = await fetchGameState(date);
             await initializeGame(gameState);
+            return true;
+        } catch (e) {
+            console.error(`COULD NOT INITILIZE GAME FOR DATE ${date}: ${e}`);
+            setGameState(null);
+            return false;
         }
     };
 
