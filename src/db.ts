@@ -197,22 +197,32 @@ export const exportData = async () => {
     const dateStr = new Date().toISOString().substring(0, 10);
 
     let blob = await exportDB(INDEXED_DB, { skipTables: ["guesses"] });
-    download(blob, `connexions-${dateStr}.json`, "text/json");
+    download(blob, `connexions-${dateStr}.json.gz`);
 
     blob = await exportDB(INDEXED_DB, {
         skipTables: ["puzzles", "categories", "cards"],
     });
-    download(blob, `guesses-${dateStr}.json`, "text/json");
+    download(blob, `guesses-${dateStr}.json.gz`);
 };
 
-const download = async (blob: Blob, filename: string, mimetype: string) => {
-    const blobUrl: string = URL.createObjectURL(blob);
+const download = async (blob: Blob, filename: string, compress = true) => {
+    let blobUrl: string;
+
+    if (compress) {
+        const cs = new CompressionStream("gzip");
+        const compressedStream = blob.stream().pipeThrough(cs);
+        const compressedBlob = await (
+            await new Response(compressedStream)
+        ).blob();
+        blobUrl = URL.createObjectURL(compressedBlob);
+    } else {
+        blobUrl = URL.createObjectURL(blob);
+    }
 
     const aElem: HTMLAnchorElement = document.createElement("a");
     aElem.href = blobUrl;
     aElem.download = filename;
-    aElem.type = mimetype;
-
+    aElem.type = "text/json";
     document.body.appendChild(aElem);
     aElem.click();
     document.body.removeChild(aElem);
