@@ -26,7 +26,6 @@
     "dependencies": {
         "dexie": "latest",
         "dexie-export-import": "latest",
-        "downloadjs": "latest",
         "hono": "latest"
     }
 }
