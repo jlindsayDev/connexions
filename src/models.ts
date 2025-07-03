@@ -5,6 +5,23 @@ export enum PuzzleStatus {
     New = 3,
 }
 
+export type PuzzleResponseModel = {
+    status: string;
+    id: number;
+    print_date: string;
+    categories: [
+        {
+            title: string;
+            cards: [
+                {
+                    content: string;
+                    position: number;
+                },
+            ];
+        },
+    ];
+};
+
 export type PuzzleModel = {
     id: number;
     print_date: string;
