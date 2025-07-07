@@ -10,7 +10,8 @@
     "private": true,
     "scripts": {
         "dev": "bunx --bun vite dev --host",
-        "build": "bunx --bun vite build --mode client && bunx --bun vite build && bunx --bun vite build --mode sw"
+        "build": "bunx --bun vite build --mode client && bunx --bun vite build && bunx --bun vite build --mode sw",
+        "db": "uvx sqlite-diffable load connections.db ../archive-puzzles/connections_db"
     },
     "devDependencies": {
         "@biomejs/biome": "2.0.0-beta.5",
@@ -18,12 +19,14 @@
         "@hono/vite-dev-server": "latest",
         "@types/bun": "latest",
         "@types/downloadjs": "latest",
+        "@typescript/native-preview": "latest",
         "vite": "npm:rolldown-vite@latest"
     },
     "peerDependencies": {
         "typescript": "latest"
     },
     "dependencies": {
+        "@ungap/compression-stream": "github:ungap/compression-stream",
         "dexie": "latest",
         "dexie-export-import": "latest",
         "hono": "latest"

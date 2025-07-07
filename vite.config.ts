@@ -4,6 +4,9 @@ import { type ConfigEnv, defineConfig } from "vite";
 
 export default defineConfig((_configEng: ConfigEnv) => {
     return {
+        build: {
+            target: "esnext",
+        },
         esbuild: {
             jsxImportSource: "hono/jsx/dom",
         },
