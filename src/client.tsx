@@ -5,19 +5,14 @@ import Calendar from "./components/calendar";
 import Puzzle from "./components/puzzle";
 import * as db from "./db";
 import type { ApiRoutes } from "./index";
-import type {
-    CardModel,
-    CategoryModel,
-    GameState,
-    PuzzleResponseModel,
-} from "./models";
+import type * as models from "./models";
 import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
 import { requestNotifications } from "./utils";
 
-const fetchGameState = async (date: string): Promise<GameState> => {
+const fetchGameState = async (date: string): Promise<models.GameState> => {
     const client = hc<ApiRoutes>("/");
     const response = await client.puzzle[":date"].$get({ param: { date } });
-    const jsonData = (await response.json()) as PuzzleResponseModel;
+    const jsonData = (await response.json()) as models.PuzzleResponseModel;
     return db.addStateFromJson(jsonData);
 };
 
@@ -33,7 +28,7 @@ const fetchGameStream = async ({
         param: { year, month },
     });
 
-    ((await response.json()) as GameState[]).forEach(db.addGameState);
+    ((await response.json()) as models.GameState[]).forEach(db.addGameState);
 };
 
 const helperButtons = (
@@ -62,19 +57,21 @@ const helperButtons = (
 );
 
 function App() {
-    const [gameState, setGameState] = useState<GameState | null>(null);
-    const [selectedCards, setSelectedCards] = useState<CardModel[]>([]);
-    const [availableCards, setAvailableCards] = useState<CardModel[]>([]);
-    const [guessedCategories, setGuessedCategories] = useState<CategoryModel[]>(
+    const [gameState, setGameState] = useState<models.GameState | null>(null);
+    const [selectedCards, setSelectedCards] = useState<models.CardModel[]>([]);
+    const [availableCards, setAvailableCards] = useState<models.CardModel[]>(
         [],
     );
+    const [guessedCategories, setGuessedCategories] = useState<
+        models.CategoryModel[]
+    >([]);
 
-    const initializeGame = async (gameState: GameState) => {
+    const initializeGame = async (gameState: models.GameState) => {
         setGameState(gameState);
         setSelectedCards([]);
 
-        const categories: CategoryModel[] = [];
-        let cards: CardModel[] = [...gameState.cards];
+        const categories: models.CategoryModel[] = [];
+        let cards: models.CardModel[] = [...gameState.cards];
 
         (await db.getGuesses(gameState.puzzle))
             .filter(({ category_id }) => category_id)
@@ -162,7 +159,7 @@ function App() {
     };
 
     const tryToggleCard =
-        (card: CardModel) =>
+        (card: models.CardModel) =>
         (e: MouseEvent): void => {
             const target = e.target as HTMLButtonElement;
 

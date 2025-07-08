@@ -1,21 +1,13 @@
 import { Dexie, type EntityTable } from "dexie";
 import { exportDB, importDB } from "dexie-export-import";
-import {
-    type CardModel,
-    type CategoryModel,
-    type GameState,
-    type GuessModel,
-    type PuzzleModel,
-    type PuzzleResponseModel,
-    PuzzleStatus,
-} from "./models";
+import * as models from "./models";
 import { toBase64 } from "./utils";
 
 const INDEXED_DB = new Dexie("PuzzlesDatabase") as Dexie & {
-    puzzles: EntityTable<PuzzleModel, "id">;
-    cards: EntityTable<CardModel, "id">;
-    categories: EntityTable<CategoryModel, "id">;
-    guesses: EntityTable<GuessModel, "id">;
+    puzzles: EntityTable<models.PuzzleModel, "id">;
+    cards: EntityTable<models.CardModel, "id">;
+    categories: EntityTable<models.CategoryModel, "id">;
+    guesses: EntityTable<models.GuessModel, "id">;
 };
 
 // Schema declaration:
@@ -28,7 +20,7 @@ INDEXED_DB.version(2).stores({
 
 export const getGameState = async (
     print_date: string,
-): Promise<GameState | null> => {
+): Promise<models.GameState | null> => {
     const puzzle = await INDEXED_DB.puzzles.get({ print_date });
     if (!puzzle) {
         return null;
@@ -44,14 +36,14 @@ export const getGameState = async (
 };
 
 export const addStateFromJson = async (
-    json: PuzzleResponseModel,
-): Promise<GameState> => {
+    json: models.PuzzleResponseModel,
+): Promise<models.GameState> => {
     const puzzleAttrs = {
         print_date: json.print_date,
-        status: PuzzleStatus.NotAttempted,
+        status: models.PuzzleStatus.NotAttempted,
     };
     const puzzle_id = await INDEXED_DB.puzzles.add(puzzleAttrs);
-    const puzzle: PuzzleModel = { ...puzzleAttrs, id: puzzle_id };
+    const puzzle: models.PuzzleModel = { ...puzzleAttrs, id: puzzle_id };
 
     const categoryPromises = json.categories.map(async (categoryJson, i) => {
         const categoryAttrs = {
@@ -61,7 +53,10 @@ export const addStateFromJson = async (
             hint_card_id: null,
         };
         const category_id = await INDEXED_DB.categories.add(categoryAttrs);
-        const category: CategoryModel = { ...categoryAttrs, id: category_id };
+        const category: models.CategoryModel = {
+            ...categoryAttrs,
+            id: category_id,
+        };
 
         const cardPromises = categoryJson.cards.map(async (cardJson) => {
             const cardAttrs = {
@@ -71,7 +66,7 @@ export const addStateFromJson = async (
                 category_id,
             };
             const card_id = await INDEXED_DB.cards.add(cardAttrs);
-            const card: CardModel = { ...cardAttrs, id: card_id };
+            const card: models.CardModel = { ...cardAttrs, id: card_id };
             return card;
         });
 
@@ -79,10 +74,12 @@ export const addStateFromJson = async (
     });
 
     const pairs = await Promise.all(categoryPromises);
-    const categories: CategoryModel[] = pairs.map(({ category }) => category);
-    const cards: CardModel[] = pairs.flatMap(({ cards }) => cards);
+    const categories: models.CategoryModel[] = pairs.map(
+        ({ category }) => category,
+    );
+    const cards: models.CardModel[] = pairs.flatMap(({ cards }) => cards);
 
-    const gameState: GameState = { puzzle, categories, cards };
+    const gameState: models.GameState = { puzzle, categories, cards };
     return gameState;
 };
 
@@ -90,10 +87,10 @@ export const addGameState = async ({
     puzzle,
     cards,
     categories,
-}: GameState): Promise<boolean> => {
+}: models.GameState): Promise<boolean> => {
     const puzzle_id = await INDEXED_DB.puzzles.add({
         ...puzzle,
-        status: PuzzleStatus.NotAttempted,
+        status: models.PuzzleStatus.NotAttempted,
     });
 
     const cardMapping = Map.groupBy(cards, ({ category_id }) => category_id);
@@ -114,10 +111,10 @@ export const addGameState = async ({
 };
 
 export const addGuess = async (
-    { id: puzzle_id }: PuzzleModel,
+    { id: puzzle_id }: models.PuzzleModel,
     guess: string,
     category_id: number | null = null,
-): Promise<GuessModel> => {
+): Promise<models.GuessModel> => {
     const guess_id = await INDEXED_DB.guesses.add({
         puzzle_id,
         category_id,
@@ -127,15 +124,15 @@ export const addGuess = async (
 };
 
 export const getGuess = async (
-    { id: puzzle_id }: PuzzleModel,
+    { id: puzzle_id }: models.PuzzleModel,
     guess: string,
-): Promise<GuessModel | undefined> => {
+): Promise<models.GuessModel | undefined> => {
     return await INDEXED_DB.guesses.where({ puzzle_id, guess }).first();
 };
 
 export const getGuesses = async ({
     id: puzzle_id,
-}: PuzzleModel): Promise<GuessModel[]> => {
+}: models.PuzzleModel): Promise<models.GuessModel[]> => {
     return await INDEXED_DB.guesses.where({ puzzle_id }).toArray();
 };
 
