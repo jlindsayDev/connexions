@@ -9,7 +9,7 @@ export const requestNotifications = async (e: MouseEvent) => {
     }
 };
 
-export const pad = (i: number): string => i.toString().padStart(2, "0");
+export const pad = (i: number) => i.toString().padStart(2, "0");
 
 export const partition = (
     arr: Array<any>,
@@ -24,22 +24,14 @@ export const partition = (
     );
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Window/btoa#unicode_strings
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
-
 export const fromBase64 = (base64: string) => {
     const binString = atob(base64);
-    const bytes = Uint8Array.from<string>(
-        binString,
-        (m) => m.codePointAt(0) ?? -99,
-    );
-    return textDecoder.decode(bytes);
+    const bytes = Uint8Array.from<string>(binString, (m) => m.codePointAt(0)!);
+    return new TextDecoder().decode(bytes);
 };
 
 export const toBase64 = (text: string) => {
-    const bytes = textEncoder.encode(text);
-    const binString = Array.from(bytes, (byte) =>
-        String.fromCodePoint(byte),
-    ).join("");
+    const bytes = new TextEncoder().encode(text);
+    const binString = Array.from(bytes, String.fromCodePoint).join("");
     return btoa(binString);
 };
