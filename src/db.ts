@@ -1,6 +1,5 @@
-import type { Database } from "bun:sqlite";
 import { Dexie, type EntityTable } from "dexie";
-import { exportDB } from "dexie-export-import";
+import { exportDB, importDB } from "dexie-export-import";
 import {
     type CardModel,
     type CategoryModel,
@@ -12,54 +11,7 @@ import {
 } from "./models";
 import { toBase64 } from "./utils";
 
-export const fetchGameState = (db: Database, date: string): GameState => {
-    let stmt;
-
-    stmt = db.prepare<PuzzleModel, string>(
-        "SELECT * FROM puzzles WHERE print_date = ?",
-    );
-
-    const puzzle = stmt.get(date);
-    if (!puzzle) {
-        throw `no puzzle for date ${date}`;
-    }
-
-    stmt = db.prepare<CardModel, number>(
-        "SELECT * FROM cards WHERE puzzle_id = ?",
-    );
-
-    const cards = stmt.all(puzzle.id);
-    if (!cards || cards.length == 0) {
-        throw `no cards for puzzle ${puzzle.id}`;
-    }
-
-    const encodedCards = cards.map((c) => ({
-        ...c,
-        content: toBase64(c.content),
-    }));
-
-    stmt = db.prepare<CategoryModel, number>(
-        "SELECT * FROM categories WHERE puzzle_id = ?",
-    );
-
-    const categories = stmt.all(puzzle.id);
-    if (!categories || categories.length == 0) {
-        throw `no categories for puzzle ${puzzle.id}`;
-    }
-
-    const encodedCategories = categories.map((c) => ({
-        ...c,
-        category: toBase64(c.category),
-    }));
-
-    return {
-        puzzle,
-        cards: encodedCards,
-        categories: encodedCategories,
-    };
-};
-
-export const INDEXED_DB = new Dexie("PuzzlesDatabase") as Dexie & {
+const INDEXED_DB = new Dexie("PuzzlesDatabase") as Dexie & {
     puzzles: EntityTable<PuzzleModel, "id">;
     cards: EntityTable<CardModel, "id">;
     categories: EntityTable<CategoryModel, "id">;
@@ -209,11 +161,10 @@ const download = async (blob: Blob, filename: string, compress = true) => {
     let blobUrl: string;
 
     if (compress) {
-        const cs = new CompressionStream("gzip");
-        const compressedStream = blob.stream().pipeThrough(cs);
-        const compressedBlob = await (
-            await new Response(compressedStream)
-        ).blob();
+        const compressedStream = blob
+            .stream()
+            .pipeThrough(new CompressionStream("gzip") as ReadableWritablePair);
+        const compressedBlob = await new Response(compressedStream).blob();
         blobUrl = URL.createObjectURL(compressedBlob);
     } else {
         blobUrl = URL.createObjectURL(blob);
@@ -227,4 +178,13 @@ const download = async (blob: Blob, filename: string, compress = true) => {
     aElem.click();
     document.body.removeChild(aElem);
     URL.revokeObjectURL(blobUrl);
+};
+
+export const upload = async (blob: Blob) => {
+    const decompressionStream = blob
+        .stream()
+        .pipeThrough(new DecompressionStream("gzip") as ReadableWritablePair);
+    const decompressedBlob = await new Response(decompressionStream).blob();
+
+    importDB(decompressedBlob);
 };

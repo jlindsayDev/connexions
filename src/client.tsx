@@ -1,8 +1,10 @@
+import { hc } from "hono/client";
 import { useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import Calendar from "./components/calendar";
 import Puzzle from "./components/puzzle";
 import * as db from "./db";
+import type { ApiRoutes } from "./index";
 import type {
     CardModel,
     CategoryModel,
@@ -11,6 +13,53 @@ import type {
 } from "./models";
 import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
 import { requestNotifications } from "./utils";
+
+const fetchGameState = async (date: string): Promise<GameState> => {
+    const client = hc<ApiRoutes>("/");
+    const response = await client.puzzle[":date"].$get({ param: { date } });
+    const jsonData = (await response.json()) as PuzzleResponseModel;
+    return db.addStateFromJson(jsonData);
+};
+
+const fetchGameStream = async ({
+    year,
+    month,
+}: {
+    year: string;
+    month: string;
+}) => {
+    const client = hc<ApiRoutes>("/");
+    const response = await client.calendar[":year"][":month"].$get({
+        param: { year, month },
+    });
+
+    ((await response.json()) as GameState[]).forEach(db.addGameState);
+};
+
+const helperButtons = (
+    <div class={buttonGridClass}>
+        <button type="button" onClick={() => db.resetData()}>
+            CLEAR THE DATA
+        </button>
+
+        <button type="button" onClick={() => db.exportData()}>
+            EXPORT THE DATA
+        </button>
+
+        {Notification?.permission !== "granted" && (
+            <button type="button" onClick={requestNotifications}>
+                NOTIFICATIONS
+            </button>
+        )}
+
+        <button
+            type="button"
+            onClick={() => fetchGameStream({ year: "2025", month: "06" })}
+        >
+            IMPORT FROM DB (BETA)
+        </button>
+    </div>
+);
 
 function App() {
     const [gameState, setGameState] = useState<GameState | null>(null);
@@ -27,8 +76,7 @@ function App() {
         const categories: CategoryModel[] = [];
         let cards: CardModel[] = [...gameState.cards];
 
-        const guesses = await db.getGuesses(gameState.puzzle);
-        guesses
+        (await db.getGuesses(gameState.puzzle))
             .filter(({ category_id }) => category_id)
             .forEach(({ category_id: guessCategoryId }) => {
                 const guessedCategory = gameState.categories.find(
@@ -95,12 +143,6 @@ function App() {
         }
     };
 
-    const fetchGameState = async (date: string): Promise<GameState> => {
-        const response = await fetch(`/puzzle/${date}`);
-        const jsonData = (await response.json()) as PuzzleResponseModel;
-        return db.addStateFromJson(jsonData);
-    };
-
     const handleDateChange = (date: string) => async (_e: MouseEvent) => {
         let gameState = await db.getGameState(date);
         if (gameState) {
@@ -142,22 +184,7 @@ function App() {
                     year={date.getFullYear()}
                     selectDateFn={handleDateChange}
                 />
-
-                <div class={buttonGridClass}>
-                    <button type="button" onClick={() => db.resetData()}>
-                        CLEAR THE DATA
-                    </button>
-
-                    <button type="button" onClick={() => db.exportData()}>
-                        EXPORT THE DATA
-                    </button>
-
-                    {Notification?.permission !== "granted" && (
-                        <button type="button" onClick={requestNotifications}>
-                            NOTIFICATIONS
-                        </button>
-                    )}
-                </div>
+                {helperButtons}
             </div>
 
             {gameState && (
