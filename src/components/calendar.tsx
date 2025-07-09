@@ -56,16 +56,15 @@ const Calendar: FC<CalendarProps> = (props: CalendarProps) => {
             days.push(dayElement);
         }
 
-        for (let i = 1; i <= daysInMonth; i++) {
-            const date = `${year}-${pad(month + 1)}-${pad(i)}`;
-
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`;
             const dayElement = (
                 <button
-                    key={date}
-                    onClick={props.selectDateFn(date)}
+                    key={dateStr}
+                    onClick={props.selectDateFn(dateStr)}
                     class={gridDayClass}
                 >
-                    {i}
+                    {day}
                 </button>
             );
             days.push(dayElement);
