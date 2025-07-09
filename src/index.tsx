@@ -63,7 +63,7 @@ const app = new Hono()
                     </head>
                     <body>
                         <div id="root" />
-                        <script type="module" src="/src/client.tsx" />
+                        <script defer type="module" src="/src/client.tsx" />
                     </body>
                 </html>
             </>,
