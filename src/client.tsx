@@ -1,5 +1,5 @@
 import { hc } from "hono/client";
-import { useState } from "hono/jsx";
+import { type FC, useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import Calendar from "./components/calendar";
 import Puzzle from "./components/puzzle";
@@ -56,10 +56,15 @@ const helperButtons = (
     </div>
 );
 
-const App = () => {
+type AppProps = {
+    startDate: Date;
+    startDays: Set<number>;
+};
+
+const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
     // Calendar State
-    const [date, setDate] = useState<Date>(new Date());
-    const [days, setDays] = useState<Set<number>>(new Set());
+    const [date, setDate] = useState<Date>(startDate);
+    const [days, setDays] = useState<Set<number>>(startDays);
 
     // Puzzle State
     const [gameState, setGameState] = useState<models.GameState | null>(null);
@@ -216,5 +221,12 @@ const App = () => {
     );
 };
 
-const root = document.getElementById("root")!;
-render(<App />, root);
+const startDate = new Date();
+const startDays = await db.daysDownloaded(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+);
+render(
+    <App startDate={startDate} startDays={startDays} />,
+    document.getElementById("root")!,
+);
