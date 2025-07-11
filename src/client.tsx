@@ -57,6 +57,10 @@ const helperButtons = (
 );
 
 function App() {
+    // Calendar State
+    const [date, setDate] = useState<Date>(new Date());
+
+    // Puzzle State
     const [gameState, setGameState] = useState<models.GameState | null>(null);
     const [selectedCards, setSelectedCards] = useState<models.CardModel[]>([]);
     const [availableCards, setAvailableCards] = useState<models.CardModel[]>(
@@ -140,7 +144,11 @@ function App() {
         }
     };
 
-    const handleDateChange = (date: string) => async (_e: MouseEvent) => {
+    const handleMonthChange = (offset: number) => async (_e: Event) => {
+        setDate(new Date(date.setMonth(date.getMonth() + offset)));
+    };
+
+    const handleDateChange = (date: string) => async (_e: Event) => {
         let gameState = await db.getGameState(date);
         if (gameState) {
             await initializeGame(gameState);
@@ -172,13 +180,12 @@ function App() {
             }
         };
 
-    const date = new Date();
     return (
         <div class={flexContainer}>
             <div class={flexContainerItem}>
                 <Calendar
-                    month={date.getMonth()}
-                    year={date.getFullYear()}
+                    date={date}
+                    moveMonth={handleMonthChange}
                     selectDateFn={handleDateChange}
                 />
                 {helperButtons}
