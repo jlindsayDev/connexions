@@ -31,9 +31,9 @@
             },
             "extensions": [
                 "oven.bun-vscode",
-                "ms-vscode.vscode-typescript-next",
                 "biomejs.biome",
-                "TypeScriptTeam.native-preview"
+                "TypeScriptTeam.native-preview",
+                "styled-components.vscode-styled-components"
             ]
         }
     }
