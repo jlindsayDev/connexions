@@ -31,6 +31,9 @@ const fetchGameStream = async ({
     ((await response.json()) as models.GameState[]).forEach(db.addGameState);
 };
 
+const fetchDaysDownloaded = async (date: Date) =>
+    await db.daysDownloaded(date.getFullYear(), date.getMonth());
+
 const helperButtons = (
     <div class={buttonGridClass}>
         <button type="button" onClick={() => db.resetData()}>
@@ -80,12 +83,7 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
     const handleMonthChange = (offset: number) => async (_e: Event) => {
         const calendarDate = new Date(date.setMonth(date.getMonth() + offset));
         setDate(calendarDate);
-        setDays(
-            await db.daysDownloaded(
-                calendarDate.getFullYear(),
-                calendarDate.getMonth(),
-            ),
-        );
+        setDays(await fetchDaysDownloaded(calendarDate));
     };
 
     const handleDateChange = (date: string) => async (_e: Event) => {
@@ -222,10 +220,7 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
 };
 
 const startDate = new Date();
-const startDays = await db.daysDownloaded(
-    startDate.getFullYear(),
-    startDate.getMonth(),
-);
+const startDays = await fetchDaysDownloaded(startDate);
 render(
     <App startDate={startDate} startDays={startDays} />,
     document.getElementById("root")!,
