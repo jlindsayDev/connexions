@@ -1,6 +1,7 @@
 import { css as czz } from "hono/css";
 import { css } from "hono/jsx/dom/css";
 
+// Server-side rendered CSS
 export const bodyCss = czz`
     body {
         margin: 0;
@@ -80,6 +81,13 @@ export const gridDayClass = css`
     width: 2.5rem;
     height: 2.5rem;
     text-decoration: none;
+`;
+
+export const downloadedClass = css`
+    background-color: blanchedalmond;
+    &::after {
+        content: "*"
+    }
 `;
 
 export const calendarGridClass = css`

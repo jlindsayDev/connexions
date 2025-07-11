@@ -1,8 +1,10 @@
+import { cx } from "hono/css";
 import type { FC } from "hono/jsx/dom";
 import {
     calendarContainer,
     calendarGridClass,
     calendarHeaderClass,
+    downloadedClass,
     gridDayClass,
     gridEmptyClass,
 } from "../styles";
@@ -44,7 +46,10 @@ const Calendar: FC<CalendarProps> = (props: CalendarProps) => {
                 <button
                     key={dateStr}
                     onClick={props.selectDateFn(dateStr)}
-                    class={gridDayClass}
+                    class={cx(
+                        gridDayClass,
+                        props.downloaded.has(day) ? downloadedClass : null,
+                    )}
                 >
                     {day}
                 </button>
