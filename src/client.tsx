@@ -56,9 +56,10 @@ const helperButtons = (
     </div>
 );
 
-function App() {
+const App = () => {
     // Calendar State
     const [date, setDate] = useState<Date>(new Date());
+    const [days, setDays] = useState<Set<number>>(new Set());
 
     // Puzzle State
     const [gameState, setGameState] = useState<models.GameState | null>(null);
@@ -70,6 +71,37 @@ function App() {
         models.CategoryModel[]
     >([]);
 
+    // Calendar Functions
+    const handleMonthChange = (offset: number) => async (_e: Event) => {
+        const calendarDate = new Date(date.setMonth(date.getMonth() + offset));
+        setDate(calendarDate);
+        setDays(
+            await db.daysDownloaded(
+                calendarDate.getFullYear(),
+                calendarDate.getMonth(),
+            ),
+        );
+    };
+
+    const handleDateChange = (date: string) => async (_e: Event) => {
+        let gameState = await db.getGameState(date);
+        if (gameState) {
+            await initializeGame(gameState);
+            return true;
+        }
+
+        try {
+            gameState = await fetchGameState(date);
+            await initializeGame(gameState);
+            return true;
+        } catch (e) {
+            console.error(`COULD NOT INITILIZE GAME FOR DATE ${date}: ${e}`);
+            setGameState(null);
+            return false;
+        }
+    };
+
+    // Puzzle Functions
     const initializeGame = async (gameState: models.GameState) => {
         setGameState(gameState);
         setSelectedCards([]);
@@ -144,28 +176,6 @@ function App() {
         }
     };
 
-    const handleMonthChange = (offset: number) => async (_e: Event) => {
-        setDate(new Date(date.setMonth(date.getMonth() + offset)));
-    };
-
-    const handleDateChange = (date: string) => async (_e: Event) => {
-        let gameState = await db.getGameState(date);
-        if (gameState) {
-            await initializeGame(gameState);
-            return true;
-        }
-
-        try {
-            gameState = await fetchGameState(date);
-            await initializeGame(gameState);
-            return true;
-        } catch (e) {
-            console.error(`COULD NOT INITILIZE GAME FOR DATE ${date}: ${e}`);
-            setGameState(null);
-            return false;
-        }
-    };
-
     const tryToggleCard =
         (card: models.CardModel) =>
         (e: MouseEvent): void => {
@@ -185,6 +195,7 @@ function App() {
             <div class={flexContainerItem}>
                 <Calendar
                     date={date}
+                    downloaded={days}
                     moveMonth={handleMonthChange}
                     selectDateFn={handleDateChange}
                 />
@@ -203,7 +214,7 @@ function App() {
             )}
         </div>
     );
-}
+};
 
 const root = document.getElementById("root")!;
 render(<App />, root);

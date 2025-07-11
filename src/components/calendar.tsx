@@ -10,6 +10,7 @@ import { pad } from "../utils";
 
 type CalendarProps = {
     date: Date;
+    downloaded: Set<number>;
     moveMonth: (offset: number) => (_e: Event) => void;
     selectDateFn: (date: string) => (_e: Event) => void;
 };

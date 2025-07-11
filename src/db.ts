@@ -1,7 +1,7 @@
 import { Dexie, type EntityTable } from "dexie";
 import { exportDB, importDB } from "dexie-export-import";
 import * as models from "./models";
-import { toBase64 } from "./utils";
+import { pad, toBase64 } from "./utils";
 
 const INDEXED_DB = new Dexie("PuzzlesDatabase") as Dexie & {
     puzzles: EntityTable<models.PuzzleModel, "id">;
@@ -17,6 +17,17 @@ INDEXED_DB.version(2).stores({
     cards: "++id, *puzzle_id, *category_id",
     guesses: "++id, *puzzle_id",
 });
+
+export const daysDownloaded = async (year: number, month: number) => {
+    const puzzles = await INDEXED_DB.puzzles
+        .where("print_date")
+        .startsWith(`${year}-${pad(month)}-`)
+        .toArray();
+    const days = puzzles.map(
+        ({ print_date }) => Number.parseInt(print_date.substring(8), 10)!,
+    );
+    return new Set(days);
+};
 
 export const getGameState = async (
     print_date: string,
