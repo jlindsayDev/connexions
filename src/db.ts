@@ -21,7 +21,7 @@ INDEXED_DB.version(2).stores({
 export const daysDownloaded = async (year: number, month: number) => {
     const puzzles = await INDEXED_DB.puzzles
         .where("print_date")
-        .startsWith(`${year}-${pad(month)}-`)
+        .startsWith(`${year}-${pad(month + 1)}-`)
         .toArray();
     const days = puzzles.map(
         ({ print_date }) => Number.parseInt(print_date.substring(8), 10)!,
