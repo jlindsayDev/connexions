@@ -74,7 +74,6 @@ export const addGameState = async ({
     const cardMapping = Map.groupBy(cards, ({ category_id }) => category_id);
 
     const categoryPromises = categories.map(async ({ title, id }, i) => {
-        console.log(title, toBase64(title), fromBase64(toBase64(title)));
         const category_id = await INDEXED_DB.categories.add({
             puzzle_id,
             difficulty: i,
