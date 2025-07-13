@@ -20,11 +20,11 @@ type CalendarProps = {
 const Calendar: FC<CalendarProps> = (props: CalendarProps) => {
     const year = props.date.getFullYear();
     const month = props.date.getMonth();
-    const daysInMonth = new Date(year, month, 0).getDate();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDayIndex = new Date(year, month, 1).getDay();
 
     const renderDays = () => {
-        const days = "M Tu W Th F Sa Su".split(" ").map((day) => (
+        const days = "Su M Tu W Th F Sa".split(" ").map((day) => (
             <div key={`header-${day}`} classList={[]}>
                 {day}
             </div>
