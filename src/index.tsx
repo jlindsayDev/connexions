@@ -5,9 +5,9 @@ import { Style } from "hono/css";
 import { html } from "hono/html";
 import * as models from "./models";
 import { bodyCss } from "./styles";
-import { fromBase64, toBase64 } from "./utils";
+import { fromBase64 } from "./utils";
 
-const fetchGames = (year: string, month: string): models.GameState[] => {
+const fetchGames = (year: string, month: string) => {
     const dateStr = `${year}-${month}-%`;
 
     const DB = new Database("connexions.db", {
@@ -22,15 +22,11 @@ const fetchGames = (year: string, month: string): models.GameState[] => {
 
     const categories = DB.prepare<models.CategoryModel, number[]>(
         `SELECT * FROM categories WHERE puzzle_id IN (${puzzleIdsStr})`,
-    )
-        .all()
-        .map((c) => ({ ...c, category: toBase64(c.category) }));
+    ).all();
 
     const cards = DB.prepare<models.CardModel, number[]>(
         `SELECT * FROM cards WHERE puzzle_id IN (${puzzleIdsStr})`,
-    )
-        .all()
-        .map((c) => ({ ...c, content: toBase64(c.content) }));
+    ).all();
 
     const categoriesByPuzzleId = Object.groupBy(
         categories,
@@ -46,9 +42,7 @@ const fetchGames = (year: string, month: string): models.GameState[] => {
     }));
 };
 
-const parseResponseJson = (
-    json: models.PuzzleResponseModel,
-): models.GameState => {
+const parseResponseJson = (json: models.PuzzleResponseModel) => {
     const puzzle = {
         print_date: json.print_date,
         status: models.PuzzleStatus.NotAttempted,
@@ -63,15 +57,16 @@ const parseResponseJson = (
                         puzzle_id: puzzle.id,
                         category_id: -i, // for mapping category->card
                         position,
-                        content: toBase64(content),
+                        content,
                     }) as models.CardModel,
             );
             cards.push(...cardsToAdd);
 
             return {
                 id: -i, // for mapping category->card
+                puzzle_id: puzzle.id,
                 difficulty: i,
-                category: toBase64(title),
+                title,
             } as models.CategoryModel;
         },
     );

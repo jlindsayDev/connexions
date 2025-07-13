@@ -7,7 +7,6 @@ import {
     categoryGridClass,
     puzzleContainerClass,
 } from "../styles";
-import { fromBase64 } from "../utils";
 
 type PuzzleProps = {
     guessedCategories: CategoryModel[];
@@ -19,10 +18,10 @@ type PuzzleProps = {
 const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
     <div class={puzzleContainerClass}>
         <div class={categoryGridClass}>
-            {props.guessedCategories.map((c, i) => (
-                <div class={`category-${c.difficulty}`} key={i}>
-                    <h4>{fromBase64(c.category)}</h4>
-                    <h5>WORDS</h5>
+            {props.guessedCategories.map(({ difficulty, title }, i) => (
+                <div class={`category-${difficulty}`} key={i}>
+                    <h4>{title}</h4>
+                    <h5>TODO: PUT WORDS HERE</h5>
                 </div>
             ))}
         </div>
@@ -30,14 +29,14 @@ const Puzzle: FC<PuzzleProps> = (props: PuzzleProps) => (
         <div class={cardGridClass}>
             {props.availableCards
                 .toSorted(({ position: a }, { position: b }) => a - b)
-                .map((c) => (
+                .map((card) => (
                     <button
                         class={cardClass}
-                        onClick={props.selectCardFn(c)}
+                        onClick={props.selectCardFn(card)}
                         onKeyDown={props.guessFn}
-                        key={c.id}
+                        key={card.id}
                     >
-                        {fromBase64(c.content)}
+                        {card.content}
                     </button>
                 ))}
         </div>
