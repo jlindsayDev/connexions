@@ -9,22 +9,14 @@ import type * as models from "./models";
 import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
 import { requestNotifications } from "./utils";
 
-const fetchGameState = async (date: string): Promise<models.GameState> => {
-    const client = hc<ApiRoutes>("/");
-    const response = await client.puzzle[":date"].$get({ param: { date } });
-    const jsonData = (await response.json()) as models.PuzzleResponseModel;
-    return db.addStateFromJson(jsonData);
-};
-
-const fetchGameStream = async ({
+const importGameStream = async ({
     year,
     month,
 }: {
     year: string;
     month: string;
 }) => {
-    const client = hc<ApiRoutes>("/");
-    const response = await client.calendar[":year"][":month"].$get({
+    const response = await hc<ApiRoutes>("/").calendar[":year"][":month"].$get({
         param: { year, month },
     });
 
@@ -52,7 +44,7 @@ const helperButtons = (
 
         <button
             type="button"
-            onClick={() => fetchGameStream({ year: "2025", month: "06" })}
+            onClick={() => importGameStream({ year: "2025", month: "06" })}
         >
             IMPORT FROM DB (BETA)
         </button>
@@ -87,20 +79,29 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
     };
 
     const handleDateChange = (date: string) => async (_e: Event) => {
-        let gameState = await db.getGameState(date);
+        const gameState = await db.getGameState({ print_date: date });
         if (gameState) {
             await initializeGame(gameState);
             return true;
         }
 
         try {
-            gameState = await fetchGameState(date);
+            const response = await hc<ApiRoutes>("/").puzzle[":date"].$get({
+                param: { date },
+            });
+            const minGameState = (await response.json()) as models.GameState;
+            const puzzle_id = await db.addGameState(minGameState);
+
+            const day = Number.parseInt(date.substring(8));
+            setDays(new Set([...days, day]));
+
+            const gameState = (await db.getGameState({ puzzle_id }))!;
             await initializeGame(gameState);
             return true;
         } catch (e) {
-            console.error(`COULD NOT INITILIZE GAME FOR DATE ${date}: ${e}`);
+            console.error(`COULD NOT INITILIZE GAME FOR DATE ${date}`);
             setGameState(null);
-            return false;
+            throw e;
         }
     };
 
@@ -151,7 +152,7 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
             return;
         }
 
-        const categoryId = selectedCards[0]?.category_id;
+        const categoryId = selectedCards[0]!.category_id;
         const correctGuess = selectedCards.every(
             ({ category_id }) => categoryId == category_id,
         );

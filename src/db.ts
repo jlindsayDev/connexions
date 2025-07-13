@@ -1,7 +1,7 @@
 import { Dexie, type EntityTable } from "dexie";
 import { exportDB, importDB } from "dexie-export-import";
 import * as models from "./models";
-import { pad, toBase64 } from "./utils";
+import { pad } from "./utils";
 
 const INDEXED_DB = new Dexie("PuzzlesDatabase") as Dexie & {
     puzzles: EntityTable<models.PuzzleModel, "id">;
@@ -29,10 +29,16 @@ export const daysDownloaded = async (year: number, month: number) => {
     return new Set(days);
 };
 
-export const getGameState = async (
-    print_date: string,
-): Promise<models.GameState | null> => {
-    const puzzle = await INDEXED_DB.puzzles.get({ print_date });
+export const getGameState = async ({
+    puzzle_id,
+    print_date,
+}: {
+    puzzle_id?: number;
+    print_date?: string;
+}): Promise<models.GameState | null> => {
+    const puzzle = await (puzzle_id
+        ? INDEXED_DB.puzzles.get(puzzle_id)
+        : INDEXED_DB.puzzles.get({ print_date }));
     if (!puzzle) {
         return null;
     }
@@ -46,79 +52,38 @@ export const getGameState = async (
     return { puzzle, cards, categories };
 };
 
-export const addStateFromJson = async (
-    json: models.PuzzleResponseModel,
-): Promise<models.GameState> => {
-    const puzzleAttrs = {
-        print_date: json.print_date,
-        status: models.PuzzleStatus.NotAttempted,
-    };
-    const puzzle_id = await INDEXED_DB.puzzles.add(puzzleAttrs);
-    const puzzle: models.PuzzleModel = { ...puzzleAttrs, id: puzzle_id };
-
-    const categoryPromises = json.categories.map(async (categoryJson, i) => {
-        const categoryAttrs = {
-            puzzle_id,
-            difficulty: i,
-            category: toBase64(categoryJson.title),
-            hint_card_id: null,
-        };
-        const category_id = await INDEXED_DB.categories.add(categoryAttrs);
-        const category: models.CategoryModel = {
-            ...categoryAttrs,
-            id: category_id,
-        };
-
-        const cardPromises = categoryJson.cards.map(async (cardJson) => {
-            const cardAttrs = {
-                position: cardJson.position,
-                content: toBase64(cardJson.content),
-                puzzle_id,
-                category_id,
-            };
-            const card_id = await INDEXED_DB.cards.add(cardAttrs);
-            const card: models.CardModel = { ...cardAttrs, id: card_id };
-            return card;
-        });
-
-        return { category, cards: await Promise.all(cardPromises) };
-    });
-
-    const pairs = await Promise.all(categoryPromises);
-    const categories: models.CategoryModel[] = pairs.map(
-        ({ category }) => category,
-    );
-    const cards: models.CardModel[] = pairs.flatMap(({ cards }) => cards);
-
-    const gameState: models.GameState = { puzzle, categories, cards };
-    return gameState;
-};
-
 export const addGameState = async ({
     puzzle,
     cards,
     categories,
-}: models.GameState): Promise<boolean> => {
+}: models.GameState): Promise<number> => {
     const puzzle_id = await INDEXED_DB.puzzles.add({
-        ...puzzle,
+        print_date: puzzle.print_date,
         status: models.PuzzleStatus.NotAttempted,
     });
 
     const cardMapping = Map.groupBy(cards, ({ category_id }) => category_id);
 
-    const categoryRecords = categories.map((c) => ({ ...c, puzzle_id }));
-
-    categoryRecords.forEach(async (category) => {
-        const category_id = await INDEXED_DB.categories.add(category);
-        const categoryCards = cardMapping.get(category.id)!.map((c) => ({
-            ...c,
+    const categoryPromises = categories.map(async (category, i) => {
+        const category_id = await INDEXED_DB.categories.add({
+            puzzle_id,
+            difficulty: i,
+            category: category.category,
+        });
+        const categoryCards = cardMapping.get(category.id)!.map((card) => ({
+            position: card.position,
+            content: card.content,
             category_id,
             puzzle_id,
         }));
-        await INDEXED_DB.cards.bulkAdd(categoryCards);
+
+        await INDEXED_DB.cards.bulkAdd(categoryCards, { allKeys: true });
     });
 
-    return true;
+    // block on promises
+    await Promise.all(categoryPromises);
+
+    return puzzle_id;
 };
 
 export const addGuess = async (
