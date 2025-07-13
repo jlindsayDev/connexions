@@ -221,8 +221,10 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
 };
 
 const startDate = new Date();
-const startDays = await fetchDaysDownloaded(startDate);
 render(
-    <App startDate={startDate} startDays={startDays} />,
+    <App
+        startDate={startDate}
+        startDays={await fetchDaysDownloaded(startDate)}
+    />,
     document.getElementById("root")!,
 );
