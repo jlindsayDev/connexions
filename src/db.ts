@@ -1,7 +1,7 @@
 import { Dexie, type EntityTable } from "dexie";
 import { exportDB, importDB } from "dexie-export-import";
 import * as models from "./models";
-import { pad } from "./utils";
+import { fromBase64, pad, toBase64 } from "./utils";
 
 const INDEXED_DB = new Dexie("PuzzlesDatabase") as Dexie & {
     puzzles: EntityTable<models.PuzzleModel, "id">;
@@ -49,7 +49,16 @@ export const getGameState = async ({
         .where({ puzzle_id: puzzle.id })
         .toArray();
 
-    return { puzzle, cards, categories };
+    const decodedCards = cards.map((c) => ({
+        ...c,
+        content: fromBase64(c.content),
+    }));
+    const decodedCategories = categories.map((c) => ({
+        ...c,
+        title: fromBase64(c.title),
+    }));
+
+    return { puzzle, cards: decodedCards, categories: decodedCategories };
 };
 
 export const addGameState = async ({
@@ -64,18 +73,21 @@ export const addGameState = async ({
 
     const cardMapping = Map.groupBy(cards, ({ category_id }) => category_id);
 
-    const categoryPromises = categories.map(async (category, i) => {
+    const categoryPromises = categories.map(async ({ title, id }, i) => {
+        console.log(title, toBase64(title), fromBase64(toBase64(title)));
         const category_id = await INDEXED_DB.categories.add({
             puzzle_id,
             difficulty: i,
-            category: category.category,
+            title: toBase64(title),
         });
-        const categoryCards = cardMapping.get(category.id)!.map((card) => ({
-            position: card.position,
-            content: card.content,
-            category_id,
-            puzzle_id,
-        }));
+        const categoryCards = cardMapping
+            .get(id)!
+            .map(({ position, content }) => ({
+                position,
+                content: toBase64(content),
+                category_id,
+                puzzle_id,
+            }));
 
         await INDEXED_DB.cards.bulkAdd(categoryCards, { allKeys: true });
     });

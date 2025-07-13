@@ -5,8 +5,8 @@ export enum PuzzleStatus {
 }
 
 export type PuzzleResponseModel = {
-    status: string;
     id: number;
+    status: string;
     print_date: string;
     categories: [
         {
@@ -31,7 +31,7 @@ export type CategoryModel = {
     id: number;
     puzzle_id: number;
     difficulty: number;
-    category: string;
+    title: string;
 };
 
 export type CardModel = {
