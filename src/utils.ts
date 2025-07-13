@@ -32,6 +32,8 @@ export const fromBase64 = (base64: string) => {
 
 export const toBase64 = (text: string) => {
     const bytes = new TextEncoder().encode(text);
-    const binString = Array.from(bytes, String.fromCodePoint).join("");
+    const binString = Array.from(bytes, (byte) =>
+        String.fromCodePoint(byte),
+    ).join("");
     return btoa(binString);
 };
