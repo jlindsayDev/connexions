@@ -7,49 +7,10 @@ import * as db from "./db";
 import type { ApiRoutes } from "./index";
 import type * as models from "./models";
 import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
-import { requestNotifications } from "./utils";
-
-const importGameStream = async ({
-    year,
-    month,
-}: {
-    year: string;
-    month: string;
-}) => {
-    const response = await hc<ApiRoutes>("/").calendar[":year"][":month"].$get({
-        param: { year, month },
-    });
-
-    ((await response.json()) as models.GameState[]).forEach(db.addGameState);
-};
+import { pad, requestNotifications } from "./utils";
 
 const fetchDaysDownloaded = async (date: Date) =>
     await db.daysDownloaded(date.getFullYear(), date.getMonth());
-
-const helperButtons = (
-    <div class={buttonGridClass}>
-        <button type="button" onClick={() => db.resetData()}>
-            CLEAR THE DATA
-        </button>
-
-        <button type="button" onClick={() => db.exportData()}>
-            EXPORT THE DATA
-        </button>
-
-        {Notification?.permission !== "granted" && (
-            <button type="button" onClick={requestNotifications}>
-                NOTIFICATIONS
-            </button>
-        )}
-
-        <button
-            type="button"
-            onClick={() => importGameStream({ year: "2025", month: "06" })}
-        >
-            IMPORT FROM DB (BETA)
-        </button>
-    </div>
-);
 
 type AppProps = {
     startDate: Date;
@@ -103,6 +64,26 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
             setGameState(null);
             throw e;
         }
+    };
+
+    const importGameStream = async ({
+        year,
+        month,
+    }: {
+        year: number;
+        month: number;
+    }) => {
+        const apiRoute = hc<ApiRoutes>("/").calendar[":year"][":month"];
+        const response = await apiRoute.$get({
+            param: { year: year.toString(), month: pad(month + 1) },
+        });
+        const games = (await response.json()) as models.GameState[];
+        const gamePromises = games.map(async (game) => {
+            await db.addGameState(game);
+            return Number.parseInt(game.puzzle.print_date.substring(8));
+        });
+        const newDays = await Promise.all(gamePromises);
+        setDays(new Set([...days, ...newDays]));
     };
 
     // Puzzle Functions
@@ -203,7 +184,34 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
                     moveMonth={handleMonthChange}
                     selectDateFn={handleDateChange}
                 />
-                {helperButtons}
+
+                <div class={buttonGridClass}>
+                    <button type="button" onClick={() => db.resetData()}>
+                        CLEAR THE DATA
+                    </button>
+
+                    <button type="button" onClick={() => db.exportData()}>
+                        EXPORT THE DATA
+                    </button>
+
+                    {Notification?.permission !== "granted" && (
+                        <button type="button" onClick={requestNotifications}>
+                            NOTIFICATIONS
+                        </button>
+                    )}
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            importGameStream({
+                                year: date.getFullYear(),
+                                month: date.getMonth(),
+                            })
+                        }
+                    >
+                        IMPORT FROM DB
+                    </button>
+                </div>
             </div>
 
             {gameState && (
