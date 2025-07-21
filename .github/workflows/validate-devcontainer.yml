@@ -1,0 +1,26 @@
+name: Validate Devcontainer
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate
+        # You may pin to the exact commit or the version.
+        # uses: chrisreddington/validate-devcontainer@0b52b3473ba4f9b8ad356f628da800393b3eb5d0
+        uses: chrisreddington/validate-devcontainer@v0.0.6
+        with:
+          # Comma-separated list of required VS Code extensions
+          required-extensions: biomejs.biome, oven.bun-vscode, 3timeslazy.vscodium-devpodcontainers
+          
+          # Path to devcontainer.json file
+          # devcontainer-path: # optional, default is .devcontainer/devcontainer.json
+          
+          # Enable validation of build, test, and run tasks
+          # validate-tasks: # optional, default is false
+          
+          # Comma-separated list of required devcontainer features
+          # required-features: # optional, default is 
+            
