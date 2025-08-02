@@ -12,7 +12,7 @@ import { pad } from "../utils";
 
 type CalendarProps = {
     date: Date;
-    downloaded: Set<number>;
+    downloaded: Map<number, number>;
     moveMonth: (offset: number) => (_e: Event) => void;
     selectDateFn: (date: string) => (_e: Event) => void;
 };
@@ -46,10 +46,7 @@ const Calendar: FC<CalendarProps> = (props: CalendarProps) => {
                 <button
                     key={dateStr}
                     onClick={props.selectDateFn(dateStr)}
-                    class={cx(
-                        gridDayClass,
-                        props.downloaded.has(day) ? downloadedClass : null,
-                    )}
+                    class={cx(gridDayClass, downloadedClass)}
                 >
                     {day}
                 </button>

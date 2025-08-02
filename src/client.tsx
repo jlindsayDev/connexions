@@ -5,7 +5,7 @@ import Calendar from "./components/calendar";
 import Puzzle from "./components/puzzle";
 import * as db from "./db";
 import type { ApiRoutes } from "./index";
-import type * as models from "./models";
+import * as models from "./models";
 import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
 import { pad, requestNotifications } from "./utils";
 
@@ -14,13 +14,14 @@ const fetchDaysDownloaded = async (date: Date) =>
 
 type AppProps = {
     startDate: Date;
-    startDays: Set<number>;
+    startDays: Map<number, models.PuzzleStatus>;
 };
 
 const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
     // Calendar State
     const [date, setDate] = useState<Date>(startDate);
-    const [days, setDays] = useState<Set<number>>(startDays);
+    const [days, setDays] =
+        useState<Map<number, models.PuzzleStatus>>(startDays);
 
     // Puzzle State
     const [gameState, setGameState] = useState<models.GameState | null>(null);
@@ -53,15 +54,18 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
             const minGameState = (await response.json()) as models.GameState;
             const puzzle_id = await db.addGameState(minGameState);
 
-            const day = Number.parseInt(date.substring(8));
-            setDays(new Set([...days, day]));
+            const day = new Map<number, number>().set(
+                Number.parseInt(date.substring(8)),
+                models.PuzzleStatus.NotAttempted,
+            );
+            setDays({ ...days, ...day });
 
             const gameState = (await db.getGameState({ puzzle_id }))!;
             await initializeGame(gameState);
             return true;
         } catch (e) {
             console.error(`COULD NOT INITILIZE GAME FOR DATE ${date}`);
-            setGameState(null);
+            reset();
             throw e;
         }
     };
@@ -80,10 +84,15 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
         const games = (await response.json()) as models.GameState[];
         const gamePromises = games.map(async (game) => {
             await db.addGameState(game);
-            return Number.parseInt(game.puzzle.print_date.substring(8));
+            return [
+                Number.parseInt(game.puzzle.print_date.substring(8)),
+                game.puzzle.status,
+            ];
         });
-        const newDays = await Promise.all(gamePromises);
-        setDays(new Set([...days, ...newDays]));
+        const newDays = Object.fromEntries(
+            await Promise.all(gamePromises),
+        ).toArray();
+        setDays({ ...days, ...newDays });
     };
 
     // Puzzle Functions
@@ -175,6 +184,12 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
             }
         };
 
+    const reset = () => {
+        setSelectedCards([]);
+        setAvailableCards([]);
+        setGameState(null);
+    };
+
     return (
         <div class={flexContainer}>
             <div class={flexContainerItem}>
@@ -210,6 +225,10 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
                         }
                     >
                         IMPORT FROM DB
+                    </button>
+
+                    <button type="button" onClick={() => reset()}>
+                        RESET
                     </button>
                 </div>
             </div>

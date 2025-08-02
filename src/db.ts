@@ -23,10 +23,11 @@ export const daysDownloaded = async (year: number, month: number) => {
         .where("print_date")
         .startsWith(`${year}-${pad(month + 1)}-`)
         .toArray();
-    const days = puzzles.map(
-        ({ print_date }) => Number.parseInt(print_date.substring(8), 10)!,
-    );
-    return new Set(days);
+    const days = puzzles.map(({ print_date, status }) => [
+        Number.parseInt(print_date.substring(8), 10)!,
+        status,
+    ]);
+    return Object.fromEntries(days);
 };
 
 export const getGameState = async ({
@@ -66,10 +67,19 @@ export const addGameState = async ({
     cards,
     categories,
 }: models.GameState): Promise<number> => {
+    const validate = () =>
+        cards && cards.length == 16 && categories && categories.length == 4;
+    const isValid = validate();
     const puzzle_id = await INDEXED_DB.puzzles.add({
         print_date: puzzle.print_date,
-        status: models.PuzzleStatus.NotAttempted,
+        status: isValid
+            ? models.PuzzleStatus.NotAttempted
+            : models.PuzzleStatus.Broken,
     });
+
+    if (!isValid) {
+        return puzzle_id;
+    }
 
     const cardMapping = Map.groupBy(cards, ({ category_id }) => category_id);
 
