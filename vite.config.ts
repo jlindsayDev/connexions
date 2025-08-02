@@ -11,7 +11,7 @@ export default defineConfig((_configEng: ConfigEnv) => {
             jsxImportSource: "hono/jsx/dom",
         },
         server: {
-            allowedHosts: ["confident_antonelli.orb.local", "airmac.local"],
+            allowedHosts: [".orb.local"],
         },
         plugins: [
             build({
