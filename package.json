@@ -14,7 +14,7 @@
         "db": "uvx sqlite-diffable load connections.db ../archive-puzzles/connections_db"
     },
     "devDependencies": {
-        "@biomejs/biome": "2.0.0-beta.5",
+        "@biomejs/biome": "latest",
         "@hono/vite-build": "latest",
         "@hono/vite-dev-server": "latest",
         "@types/bun": "latest",
