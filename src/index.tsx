@@ -1,10 +1,8 @@
 // import { CompressionStream } from "@ungap/compression-stream";
 import { Database } from "bun:sqlite";
 import { Hono } from "hono";
-import { Style } from "hono/css";
 import { html } from "hono/html";
 import * as models from "./models";
-import { bodyCss } from "./styles";
 import { fromBase64 } from "./utils";
 
 const fetchGames = (year: string, month: string) => {
@@ -40,6 +38,14 @@ const fetchGames = (year: string, month: string) => {
         categories: categoriesByPuzzleId[puzzle.id]!,
         cards: cardsByPuzzleId[puzzle.id]!,
     }));
+};
+
+const fetchDate = async (date: string) => {
+    const ENCODED_URL =
+        "aHR0cHM6Ly93d3cubnl0aW1lcy5jb20vc3ZjL2Nvbm5lY3Rpb25zL3YyLw==";
+    const url = `${fromBase64(ENCODED_URL)}${date}.json`;
+    const responseJson = await (await fetch(url)).json();
+    return parseResponseJson(responseJson);
 };
 
 const parseResponseJson = (json: models.PuzzleResponseModel) => {
@@ -84,25 +90,21 @@ const indexHtml = (
                     content="width=device-width, initial-scale=1"
                     name="viewport"
                 />
-                <Style>{bodyCss}</Style>
-            </head>
-            <body>
-                <div id="root" />
+                <link rel="stylesheet" href="styles.css" />
                 <script defer type="module" src="/src/client.tsx" />
-            </body>
+            </head>
+
+            <body id="root" />
         </html>
     </>
 );
 
 const app = new Hono()
     .get("/", (c) => c.html(indexHtml))
+    .get("/:year/:month/:day", (c) => c.html(<></>))
     .get("/puzzle/:date", async (c) => {
-        const date = c.req.param("date");
-        const ENCODED_URL =
-            "aHR0cHM6Ly93d3cubnl0aW1lcy5jb20vc3ZjL2Nvbm5lY3Rpb25zL3YyLw==";
-        const url = `${fromBase64(ENCODED_URL)}${date}.json`;
-        const responseJson = await (await fetch(url)).json();
-        return c.json(parseResponseJson(responseJson));
+        const puzzleJson = await fetchDate(c.req.param("date"));
+        return c.json(puzzleJson);
     })
     .get("/calendar/:year/:month", (c) => {
         const year = c.req.param("year");

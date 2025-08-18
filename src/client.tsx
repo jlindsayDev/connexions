@@ -6,7 +6,6 @@ import Puzzle from "./components/puzzle";
 import * as db from "./db";
 import type { ApiRoutes } from "./index";
 import * as models from "./models";
-import { buttonGridClass, flexContainer, flexContainerItem } from "./styles";
 import { pad, requestNotifications } from "./utils";
 
 const fetchDaysDownloaded = async (date: Date) =>
@@ -25,7 +24,6 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
 
     // Puzzle State
     const [gameState, setGameState] = useState<models.GameState | null>(null);
-    const [selectedCards, setSelectedCards] = useState<models.CardModel[]>([]);
     const [availableCards, setAvailableCards] = useState<models.CardModel[]>(
         [],
     );
@@ -62,7 +60,6 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
 
             const gameState = (await db.getGameState({ puzzle_id }))!;
             await initializeGame(gameState);
-            return true;
         } catch (e) {
             console.error(`COULD NOT INITILIZE GAME FOR DATE ${date}`);
             reset();
@@ -98,7 +95,6 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
     // Puzzle Functions
     const initializeGame = async (gameState: models.GameState) => {
         setGameState(gameState);
-        setSelectedCards([]);
 
         const categories: models.CategoryModel[] = [];
         let cards: models.CardModel[] = [...gameState.cards];
@@ -124,15 +120,15 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
         setAvailableCards(cards);
     };
 
-    const tryGuess = async (_e: UIEvent): Promise<void> => {
-        if (!gameState || selectedCards.length !== 4) {
+    const tryGuess = async (formData: FormData): Promise<void> => {
+        const cardPositions = (formData.getAll("cards") as string[]).map((c) =>
+            Number.parseInt(c, 10),
+        );
+        if (!gameState || cardPositions.length !== 4) {
             return;
         }
 
-        const guessStr = selectedCards
-            .map((c) => c.id)
-            .sort()
-            .join(",");
+        const guessStr = cardPositions.sort().join(",");
 
         const alreadyGuessed = await db.getGuess(gameState.puzzle, guessStr);
         if (alreadyGuessed) {
@@ -142,6 +138,9 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
             return;
         }
 
+        const selectedCards = gameState.cards.filter(({ position }) =>
+            cardPositions.includes(position),
+        );
         const categoryId = selectedCards[0]!.category_id;
         const correctGuess = selectedCards.every(
             ({ category_id }) => categoryId == category_id,
@@ -166,84 +165,65 @@ const App: FC<AppProps> = ({ startDate, startDays }: AppProps) => {
             setAvailableCards((cards) =>
                 cards.filter((c) => !selectedCards.includes(c)),
             );
-            setSelectedCards([]);
         }
     };
 
-    const tryToggleCard =
-        (card: models.CardModel) =>
-        (e: MouseEvent): void => {
-            const target = e.target as HTMLButtonElement;
-
-            if (selectedCards.includes(card)) {
-                target.classList.remove("selected");
-                setSelectedCards(selectedCards.filter((c) => c !== card));
-            } else if (selectedCards.length < 4) {
-                target.classList.add("selected");
-                setSelectedCards([...selectedCards, card]);
-            }
-        };
-
     const reset = () => {
-        setSelectedCards([]);
         setAvailableCards([]);
         setGameState(null);
     };
 
     return (
-        <div class={flexContainer}>
-            <div class={flexContainerItem}>
+        <>
+            <header>CONNEXIONS</header>
+
+            {gameState ? (
+                <Puzzle
+                    printDate={gameState.puzzle.print_date}
+                    guessedCategories={guessedCategories}
+                    availableCards={availableCards}
+                    guessFn={tryGuess}
+                    reset={reset}
+                />
+            ) : (
                 <Calendar
                     date={date}
                     downloaded={days}
                     moveMonth={handleMonthChange}
                     selectDateFn={handleDateChange}
                 />
-
-                <div class={buttonGridClass}>
-                    <button type="button" onClick={() => db.resetData()}>
-                        CLEAR THE DATA
-                    </button>
-
-                    <button type="button" onClick={() => db.exportData()}>
-                        EXPORT THE DATA
-                    </button>
-
-                    {Notification?.permission !== "granted" && (
-                        <button type="button" onClick={requestNotifications}>
-                            NOTIFICATIONS
-                        </button>
-                    )}
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            importGameStream({
-                                year: date.getFullYear(),
-                                month: date.getMonth(),
-                            })
-                        }
-                    >
-                        IMPORT FROM DB
-                    </button>
-
-                    <button type="button" onClick={() => reset()}>
-                        RESET
-                    </button>
-                </div>
-            </div>
-
-            {gameState && (
-                <div class={flexContainerItem}>
-                    <Puzzle
-                        guessedCategories={guessedCategories}
-                        availableCards={availableCards}
-                        selectCardFn={tryToggleCard}
-                        guessFn={tryGuess}
-                    />
-                </div>
             )}
-        </div>
+
+            <footer>
+                <button type="button" onClick={() => db.resetData()}>
+                    CLEAR THE DATA
+                </button>
+
+                <button type="button" onClick={() => db.exportData()}>
+                    EXPORT THE DATA
+                </button>
+
+                <button type="button" onClick={requestNotifications}>
+                    NOTIFICATIONS
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        importGameStream({
+                            year: date.getFullYear(),
+                            month: date.getMonth(),
+                        })
+                    }
+                >
+                    IMPORT FROM DB
+                </button>
+
+                <button type="button" onClick={() => reset()}>
+                    RESET
+                </button>
+            </footer>
+        </>
     );
 };
 

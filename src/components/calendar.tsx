@@ -1,18 +1,10 @@
-import { cx } from "hono/css";
 import type { FC } from "hono/jsx/dom";
-import {
-    calendarContainer,
-    calendarGridClass,
-    calendarHeaderClass,
-    downloadedClass,
-    gridDayClass,
-    gridEmptyClass,
-} from "../styles";
+import { PuzzleStatus } from "../models";
 import { pad } from "../utils";
 
 type CalendarProps = {
     date: Date;
-    downloaded: Map<number, number>;
+    downloaded: Map<number, PuzzleStatus>;
     moveMonth: (offset: number) => (_e: Event) => void;
     selectDateFn: (date: string) => (_e: Event) => void;
 };
@@ -23,31 +15,39 @@ const Calendar: FC<CalendarProps> = (props: CalendarProps) => {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDayIndex = new Date(year, month, 1).getDay();
 
+    const header = (
+        <nav>
+            <button type="button" onClick={props.moveMonth(-1)}>
+                &larr;
+            </button>
+
+            <span>
+                {props.date.toLocaleString("default", {
+                    month: "long",
+                })}{" "}
+                {year}
+            </span>
+
+            <button type="button" onClick={props.moveMonth(+1)}>
+                &rarr;
+            </button>
+        </nav>
+    );
+
     const renderDays = () => {
-        const days = "Su M Tu W Th F Sa".split(" ").map((day) => (
-            <div key={`header-${day}`} classList={[]}>
-                {day}
-            </div>
-        ));
+        const days = "Su M Tu W Th F Sa"
+            .split(" ")
+            .map((day) => <div key={`header-${day}`}>{day}</div>);
 
         for (let i = 0; i < firstDayIndex; i++) {
-            const dayElement = (
-                <div
-                    key={`empty-${i}`}
-                    classList={[gridDayClass, gridEmptyClass]}
-                />
-            );
+            const dayElement = <div key={`empty-${i}`} />;
             days.push(dayElement);
         }
 
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`;
             const dayElement = (
-                <button
-                    key={dateStr}
-                    onClick={props.selectDateFn(dateStr)}
-                    class={cx(gridDayClass, downloadedClass)}
-                >
+                <button key={dateStr} onClick={props.selectDateFn(dateStr)}>
                     {day}
                 </button>
             );
@@ -57,25 +57,13 @@ const Calendar: FC<CalendarProps> = (props: CalendarProps) => {
         return days;
     };
 
+    const section = <section id="calendar">{renderDays()}</section>;
+
     return (
-        <div class={calendarContainer}>
-            <nav class={calendarHeaderClass}>
-                <button type="button" onClick={props.moveMonth(-1)}>
-                    &larr;
-                </button>
-
-                <span>
-                    {props.date.toLocaleString("default", { month: "long" })}{" "}
-                    {year}
-                </span>
-
-                <button type="button" onClick={props.moveMonth(+1)}>
-                    &rarr;
-                </button>
-            </nav>
-
-            <div class={calendarGridClass}>{renderDays()}</div>
-        </div>
+        <main>
+            {header}
+            {section}
+        </main>
     );
 };
 

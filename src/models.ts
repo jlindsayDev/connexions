@@ -2,6 +2,7 @@ export enum PuzzleStatus {
     NotAttempted = 0,
     Attempted = 1,
     Solved = 2,
+    Broken = 3,
 }
 
 export type PuzzleResponseModel = {
