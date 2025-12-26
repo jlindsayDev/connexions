@@ -31,6 +31,9 @@
         // Some stricter flags (disabled by default)
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "noPropertyAccessFromIndexSignature": true
+        "noPropertyAccessFromIndexSignature": true,
+
+        // Project-specific stuff
+        "baseUrl": "./src"
     }
 }
