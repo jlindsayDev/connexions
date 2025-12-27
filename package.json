@@ -27,8 +27,8 @@
     },
     "dependencies": {
         "@ungap/compression-stream": "github:ungap/compression-stream",
-        "dexie": "latest",
+        "dexie": "^4.2.1",
         "dexie-export-import": "latest",
-        "hono": "latest"
+        "hono": "^4.11.3"
     }
 }
