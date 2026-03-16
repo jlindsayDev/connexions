@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "connexions",
+
+  // Set this to today's date
+  "compatibility_date": "2026-03-10",
+  "observability": {
+    "enabled": true,
+  },
+  "assets": {
+    "directory": "src",
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "connexions",
+      "database_id": "8cd74f09-012f-4fb0-ab99-b9becc074cbf",
+    },
+  ],
+}
