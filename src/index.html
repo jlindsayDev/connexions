@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Connexions</title>
+        <link rel="stylesheet" href="styles.css" />
+        <script defer type="module" src="./calendar.js"></script>
+        <!--<script defer type="module" src="puzzle.js"></script>-->
+    </head>
+
+    <body>
+        <header>HEADER</header>
+
+        <main id="root">
+            <form id="calendarinfo">
+                Begin the app at
+                <input type="number" name="month" min="1" max="12" value="1" />
+                <input type="number" name="year" min="2018" max="2026" value="2026" />
+                <input type="submit" />
+            </form>
+        </main>
+
+        <section class="main-thread"></section>
+        <footer id="result">FOOTER</footer>
+    </body>
+
+    <script defer type="text/javascript">
+        document.getElementById("calendarinfo").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const form = new FormData(e.target);
+            const calendar = document.createElement("calendar-component");
+            calendar.month = form.get("month");
+            calendar.year = form.get("year");
+            e.target.replaceWith(calendar);
+        });
+    </script>
+</html>
