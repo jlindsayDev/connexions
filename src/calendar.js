@@ -43,8 +43,6 @@ export class Calendar extends LitElement {
 
   constructor() {
     super();
-    this.month = 2;
-    this.year = 2026;
   }
 
   render() {
