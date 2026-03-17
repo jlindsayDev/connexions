@@ -1,10 +1,4 @@
-"use strict";
-
-import {
-  css,
-  html,
-  LitElement,
-} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { css, html, LitElement } from "lit";
 
 export class Calendar extends LitElement {
   static styles = css`
@@ -43,6 +37,8 @@ export class Calendar extends LitElement {
 
   constructor() {
     super();
+    this.month = 0;
+    this.year = 0;
   }
 
   render() {
