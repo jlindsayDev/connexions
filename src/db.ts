@@ -1,4 +1,5 @@
 import { Dexie, type EntityTable } from "dexie";
+import dexieCloud from "dexie-cloud-addon";
 
 import type {
   PuzzleModel,
@@ -11,7 +12,9 @@ import type {
 import { fromBase64, pad, toBase64 } from "./utils";
 import { PuzzleStatusEnum } from "./models";
 
-const INDEXED_DB = new Dexie("PuzzlesDatabase") as Dexie & {
+const INDEXED_DB = new Dexie("PuzzlesDatabase", {
+  addons: [dexieCloud],
+}) as Dexie & {
   puzzles: EntityTable<PuzzleModel, "id">;
   cards: EntityTable<CardModel, "id">;
   categories: EntityTable<CategoryModel, "id">;
@@ -24,6 +27,11 @@ INDEXED_DB.version(1).stores({
   categories: "++id, puzzle_id",
   cards: "++id, puzzle_id, category_id",
   guesses: "++id, puzzle_id",
+});
+
+INDEXED_DB.cloud.configure({
+  databaseUrl: "https://zvi8bk2b6.dexie.cloud",
+  requireAuth: true, // optional
 });
 
 export const fetchDaysDownloaded = async (date: Date) => {
