@@ -1,5 +1,7 @@
 import { css, html, LitElement } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
+@customElement("calendar-component")
 export class Calendar extends LitElement {
   static styles = css`
     nav {
@@ -30,10 +32,10 @@ export class Calendar extends LitElement {
     }
   `;
 
-  static properties = {
-    month: { state: true, type: Number },
-    year: { state: true, type: Number },
-  };
+  @property({ state: true, type: Number })
+  month: number = 0;
+  @property({ state: true, type: Number })
+  year: number = 0;
 
   constructor() {
     super();
@@ -87,12 +89,17 @@ export class Calendar extends LitElement {
     }
   }
 
-  _select(e) {
-    if (e.target.className === "day") {
-      const day = Number.parseInt(e.target.textContent, 10);
+  _select(e: Event) {
+    const target = e.target as HTMLInputElement;
+    if (target.className === "day") {
+      const day = Number.parseInt(target.textContent, 10)!;
       console.log(day);
     }
   }
 }
 
-customElements.define("calendar-component", Calendar);
+declare global {
+  interface HTMLElementTagNameMap {
+    "calendar-component": Calendar;
+  }
+}
