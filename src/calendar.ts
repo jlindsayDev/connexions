@@ -1,4 +1,4 @@
-import { css, html, LitElement } from "lit";
+import { type CSSResultGroup, css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 @customElement("calendar-component")
@@ -30,7 +30,7 @@ export class Calendar extends LitElement {
         padding: 15%;
       }
     }
-  `;
+  ` as CSSResultGroup;
 
   @property({ state: true, type: Number })
   month: number = 0;

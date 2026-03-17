@@ -1,4 +1,4 @@
-import { Dexie, type EntityTable } from "dexie";
+import { type EntityTable, Dexie } from "dexie";
 import dexieCloud from "dexie-cloud-addon";
 
 import type {
