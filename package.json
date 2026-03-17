@@ -1,0 +1,19 @@
+{
+  "name": "connexions",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "dexie": "^4.3.0",
+    "dexie-cloud-addon": "^4.3.9",
+    "lit": "^3.3.2"
+  },
+  "devDependencies": {
+    "vite": "^8.0.0"
+  }
+}
