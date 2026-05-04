@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "bunx --bun bun src/index.html",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "bunx --bun @biomejs/biome lint --write --unsafe ./src",
+    "unsafe-lint": "bunx --bun @biomejs/biome lint --write --unsafe ./src"
   },
   "dependencies": {
     "dexie": "^4.3.0",
@@ -14,7 +16,6 @@
     "lit": "^3.3.2"
   },
   "devDependencies": {
-    "typescript": "~5.9.3",
-    "vite": "^8.0.0"
+    "typescript": "~5.9.3"
   }
 }
