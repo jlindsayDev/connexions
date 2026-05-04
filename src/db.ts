@@ -61,6 +61,7 @@ export const fetchGameState = async ({
   if (!puzzle) {
     return null;
   }
+
   const cards = await INDEXED_DB.cards
     .where({ puzzle_id: puzzle.id })
     .toArray();
@@ -85,8 +86,10 @@ export const addGameState = async ({
   cards,
   categories,
 }: GameState): Promise<number> => {
-  const isValid =
-    cards && cards.length == 16 && categories && categories.length == 4;
+  const validCards = cards && cards.length === 16;
+  const validCategories = categories && categories.length === 4;
+  const isValid = validCards && validCategories;
+
   const puzzle_id = await INDEXED_DB.puzzles.add({
     print_date: puzzle.print_date,
     status: isValid ? PuzzleStatusEnum.NotAttempted : PuzzleStatusEnum.Broken,
@@ -104,7 +107,8 @@ export const addGameState = async ({
       difficulty: i,
       title: toBase64(title),
     });
-    const categoryCards = cardMapping.get(id)!.map(({ position, content }) => ({
+    const cards = cardMapping.get(id) || [];
+    const categoryCards = cards.map(({ position, content }) => ({
       position,
       content: toBase64(content),
       category_id,
@@ -130,7 +134,11 @@ export const addGuess = async (
     category_id,
     guess,
   });
-  return (await INDEXED_DB.guesses.get(guess_id))!;
+  const guessObj = await INDEXED_DB.guesses.get(guess_id);
+  if (!guessObj) {
+    throw new Error("Guess was not properly added");
+  }
+  return guessObj;
 };
 
 export const getGuess = async (
