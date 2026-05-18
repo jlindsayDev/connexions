@@ -1,6 +1,5 @@
 import { type CSSResultGroup, css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import * as db from "./db";
 import { padDate } from "utils";
 
 @customElement("calendar-component")
@@ -35,14 +34,10 @@ export class Calendar extends LitElement {
   ` as CSSResultGroup;
 
   @property({ state: true, type: Number })
-  month: number = 0;
+  month = 0;
 
   @property({ state: true, type: Number })
-  year: number = 0;
-
-  constructor() {
-    super();
-  }
+  year = 0;
 
   render() {
     const firstDay = new Date(this.year, this.month, 1);
