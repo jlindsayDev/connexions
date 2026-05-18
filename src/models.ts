@@ -10,23 +10,6 @@ type PuzzleStatusEnum =
 
 export { PuzzleStatusEnum };
 
-export type PuzzleResponseModel = {
-  id: number;
-  status: string;
-  print_date: string;
-  categories: [
-    {
-      title: string;
-      cards: [
-        {
-          content: string;
-          position: number;
-        },
-      ];
-    },
-  ];
-};
-
 export type PuzzleModel = {
   id: number;
   print_date: string;
