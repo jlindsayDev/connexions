@@ -4,15 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bunx --bun bun src/index.html",
+    "dev": "bun src/index.html",
+    "archive": "bun src/archive.ts",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "bunx --bun @biomejs/biome lint --write --unsafe ./src",
-    "unsafe-lint": "bunx --bun @biomejs/biome lint --write --unsafe ./src"
+    "lint": "bunx @biomejs/biome lint --write ./src",
+    "unsafe-lint": "bunx @biomejs/biome lint --write --unsafe ./src"
   },
   "dependencies": {
     "dexie": "^4.3.0",
     "dexie-cloud-addon": "^4.3.9",
+    "dexie-export-import": "^4.4.0",
     "lit": "^3.3.2"
   },
   "devDependencies": {

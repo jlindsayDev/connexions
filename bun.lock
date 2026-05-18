@@ -7,6 +7,7 @@
       "dependencies": {
         "dexie": "^4.3.0",
         "dexie-cloud-addon": "^4.3.9",
+        "dexie-export-import": "^4.4.0",
         "lit": "^3.3.2",
       },
       "devDependencies": {
@@ -26,6 +27,8 @@
     "dexie-cloud-addon": ["dexie-cloud-addon@4.3.9", "", { "dependencies": { "dexie-cloud-common": "^1.0.57", "rxjs": "^7.x", "y-dexie": "^4.2.2", "y-protocols": "^1.0.6", "yjs": "^13.6.27" }, "peerDependencies": { "dexie": "^4.3.0" } }, "sha512-172JUI+wy+Ia5zn1csODSpVSrGCye1bgqyorb07NmGNZoZ2db/Y2LL7oAPM/k/+gnzMd6PJHtNL9uLD5yf9QIA=="],
 
     "dexie-cloud-common": ["dexie-cloud-common@1.0.57", "", { "dependencies": { "lib0": "^0.2.114" } }, "sha512-zNvDYYeyG6uIHe6eQBDldQFys8YP4UPH8B0S2xth+VZflyjCP87KlJCZsGydDEq7MHbnM4xGuyqfPvyA0tgULQ=="],
+
+    "dexie-export-import": ["dexie-export-import@4.4.0", "", { "peerDependencies": { "dexie": "^4.4.0" } }, "sha512-r2yvfkcwzP0klAAsiwcCtyioD9xJG0m/mELsiuJnvJ4oP74NabUBblupYtxplEwAnDxF1JzOcsoKU+srfrkyaw=="],
 
     "isomorphic.js": ["isomorphic.js@0.2.5", "", {}, "sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw=="],
 
