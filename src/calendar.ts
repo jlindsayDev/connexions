@@ -1,10 +1,12 @@
 import { type CSSResultGroup, css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import * as db from "./db";
+import { padDate } from "utils";
 
 @customElement("calendar-component")
 export class Calendar extends LitElement {
   static styles = css`
-    nav {
+    #calendar-nav {
       text-align: center;
       justify-content: space-between;
       align-items: center;
@@ -40,8 +42,6 @@ export class Calendar extends LitElement {
 
   constructor() {
     super();
-    this.month = 0;
-    this.year = 0;
   }
 
   render() {
@@ -62,11 +62,11 @@ export class Calendar extends LitElement {
     calendar.splice(firstDayIndex, 0, ...calendarDays);
 
     return html`
-      <nav>
+      <section id="calendar-nav">
         <button @click=${this._decrement}>&larr;</button>
         <span>${monthName} ${this.year}</span>
         <button @click=${this._increment}>&rarr;</button>
-      </nav>
+      </section>
 
       <section id="calendar" @click=${this._select}>
         ${header} ${calendar}
@@ -94,11 +94,10 @@ export class Calendar extends LitElement {
     const target = e.target as HTMLInputElement;
     if (target.className === "day") {
       const day = Number.parseInt(target.textContent, 10);
-      const puzzleComponent = await initializePuzzle(
-        `${this.year}-${this.month}-${day}`,
-      );
-
-      console.log("made puzzle", puzzleComponent);
+      const printDate = padDate(this.year, this.month, day);
+      console.debug(`Clicked initializePuzzle: ${printDate}`);
+      // const puzzleComponent = await initializePuzzle(printDate);
+      // document.getElementById("puzzle")!.replaceWith(puzzleComponent!);
     }
   }
 }
