@@ -10,8 +10,10 @@ export const requestNotifications = async (e: MouseEvent) => {
 };
 
 export const pad = (i: number) => i.toString().padStart(2, "0");
-export const padDate = (...ns: number[]) =>
+export const padNums = (...ns: number[]) =>
   ns.map((n) => n.toString().padStart(2, "0")).join("-");
+export const padDate = (date: Date) =>
+  padNums(date.getFullYear(), date.getMonth(), date.getDate());
 
 export const range = (start: number, stop: number, step = 1) =>
   Array.from(
