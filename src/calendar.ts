@@ -1,5 +1,36 @@
 import { padNums } from "utils";
 
+const calendarCss = `
+  #calendar-nav {
+    display: flex;
+    text-align: center;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0rem;
+  }
+
+  #calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+  }
+
+  .dow {
+    text-align: center;
+  }
+
+  .day {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    padding: 15%;
+    cursor: pointer;
+    background: none;
+  }
+`;
+
 export class Calendar extends HTMLElement {
   private _month = 0;
   private _year = 0;
@@ -90,36 +121,7 @@ export class Calendar extends HTMLElement {
       .join("");
 
     this.shadowRoot.innerHTML = `
-      <style>
-        #calendar-nav {
-          display: flex;
-          text-align: center;
-          justify-content: space-between;
-          align-items: center;
-          padding: 1rem 0rem;
-        }
-
-        #calendar {
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 0.5rem;
-        }
-
-        .dow {
-          text-align: center;
-        }
-
-        .day {
-          border: 1px solid #ddd;
-          border-radius: 10px;
-          text-align: center;
-          align-items: center;
-          justify-content: center;
-          padding: 15%;
-          cursor: pointer;
-          background: none;
-        }
-      </style>
+      <style>${calendarCss}</style>
 
       <section id="calendar-nav">
         <button id="btn-prev">&larr;</button>
