@@ -70,7 +70,7 @@ export const fetchDaysDownloaded = async (date: Date) => {
   const year = date.getFullYear();
   const month = date.getMonth();
   const prefix = `${year}-${pad(month + 1)}-`;
-  const range = IDBKeyRange.bound(prefix, prefix + "\uffff");
+  const range = IDBKeyRange.bound(prefix, `${prefix}\uffff`);
 
   const db = await getDB();
   const tx = db.transaction("puzzles", "readonly");
@@ -108,18 +108,18 @@ export const fetchGameState = async ({
   const puzzle = await toPromise(puzzleReq);
   if (!puzzle) return null;
 
-  const cards = await toPromise(
+  const cards = (await toPromise(
     tx.objectStore("cards").index("puzzle_id").getAll(puzzle.id),
-  );
-  const categories = await toPromise(
+  )) as models.CardModel[];
+  const categories = (await toPromise(
     tx.objectStore("categories").index("puzzle_id").getAll(puzzle.id),
-  );
+  )) as models.CategoryModel[];
 
-  const decodedCards = cards.map((c: any) => ({
+  const decodedCards = cards.map((c: models.CardModel) => ({
     ...c,
     content: fromBase64(c.content),
   }));
-  const decodedCategories = categories.map((c: any) => ({
+  const decodedCategories = categories.map((c: models.CategoryModel) => ({
     ...c,
     title: fromBase64(c.title),
   }));
@@ -153,15 +153,20 @@ export const addGameState = async ({
   const cardMapping = Map.groupBy(cards, ({ category_id }) => category_id);
 
   for (let i = 0; i < categories.length; i++) {
+    const category = categories[i];
+    if (!category) {
+      continue;
+    }
+
     const category_id = (await toPromise(
       tx.objectStore("categories").add({
         puzzle_id,
         difficulty: i,
-        title: toBase64(categories[i].title),
+        title: toBase64(category.title),
       }),
     )) as number;
 
-    const catCards = cardMapping.get(categories[i].id) || [];
+    const catCards = cardMapping.get(category.id) || [];
     for (const card of catCards) {
       await toPromise(
         tx.objectStore("cards").add({
@@ -221,13 +226,16 @@ export const resetData = async (): Promise<void> => {
     const db = await getDB();
     const tx = db.transaction(db.objectStoreNames, "readwrite");
     for (let i = 0; i < db.objectStoreNames.length; i++) {
-      tx.objectStore(db.objectStoreNames[i]).clear();
+      tx.objectStore(db.objectStoreNames.item(i) ?? "").clear();
     }
   }
 };
 
-const exportStores = async (db: IDBDatabase, storeNames: string[]) => {
-  const data: Record<string, any[]> = {};
+const exportStores = async <T extends never>(
+  db: IDBDatabase,
+  storeNames: string[],
+) => {
+  const data: Record<string, T[]> = {};
   const tx = db.transaction(storeNames, "readonly");
   for (const name of storeNames) {
     data[name] = await toPromise(tx.objectStore(name).getAll());
