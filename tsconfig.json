@@ -29,5 +29,5 @@
     // Project-specific stuff
     "baseUrl": "./src",
   },
-  "include": ["src"],
+  "include": ["src", "misc"],
 }
