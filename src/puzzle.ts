@@ -24,6 +24,7 @@ const puzzleCss = `
   }
 
   label {
+    box-sizing: border-box;
     border: 1px solid #ddd;
     border-radius: 10px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -58,6 +59,7 @@ const puzzleCss = `
 class Puzzle extends HTMLElement {
   private _guesses: GuessModel[] = [];
   private _categories: CategoryModel[] = [];
+  private _guessedCategories: CategoryModel[] = [];
   private _cards: CardModel[] = [];
   private _selected: Set<number> = new Set();
 
@@ -69,14 +71,6 @@ class Puzzle extends HTMLElement {
 
   connectedCallback() {
     this.render();
-  }
-
-  get guesses() {
-    return this._guesses;
-  }
-
-  set guesses(guesses: GuessModel[]) {
-    this._guesses = guesses;
   }
 
   private render() {
@@ -99,7 +93,7 @@ class Puzzle extends HTMLElement {
         ${card.content}
       </label>`;
 
-    const categoriesHtml = this._categories.map(categoryToHtml).join("");
+    const categoriesHtml = this._guessedCategories.map(categoryToHtml).join("");
     const cardsHtml = this._cards
       .toSorted(({ position: a }, { position: b }) => a - b)
       .map(cardToHtml)
@@ -109,9 +103,20 @@ class Puzzle extends HTMLElement {
       <style>${puzzleCss}</style>
       <div id="puzzleContainer">
         <section id="categories">${categoriesHtml}</section>
-        <section id="cards">${cardsHtml}</section>
+        <form id="form">
+          <section id="cards">${cardsHtml}</section>
+          <input type="submit" value="GUESS"/>
+        </form>
       </div>
     `;
+
+    this.shadowRoot
+      .getElementById("form")
+      ?.addEventListener("submit", this.tryGuess);
+  }
+
+  private tryGuess(e: SubmitEvent) {
+    e.preventDefault();
   }
 
   private tryToggle(e: Event) {
@@ -141,7 +146,7 @@ class Puzzle extends HTMLElement {
         );
 
         if (guessedCategory) {
-          this._categories.push(guessedCategory);
+          this._guessedCategories.push(guessedCategory);
           this._cards = [
             ...this._cards.filter(
               ({ category_id: id }) => guessCategoryId !== id,
@@ -149,8 +154,6 @@ class Puzzle extends HTMLElement {
           ];
         }
       });
-
-    this.render();
   }
 }
 
