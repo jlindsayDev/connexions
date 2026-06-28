@@ -1,11 +1,65 @@
 import type { CardModel, CategoryModel, GameState, GuessModel } from "./models";
 
+const puzzleCss = `
+  #puzzleContainer {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #categories {
+    display: flex;
+    text-align: center;
+    flex-direction: column;
+  }
+
+  #cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 0.5rem;
+  }
+
+  input[type="checkbox"] {
+    appearance: none;
+  }
+
+  label {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    padding: 2rem 0rem;
+    font-weight: bold;
+    font-size: clamp(0.5rem, 0.9rem, 2rem);
+    text-align: center;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+
+  label:has(input[type="checkbox"]:checked) {
+    background-color: blanchedalmond;
+  }
+
+  @media (prefers-color-scheme: light) {
+    .category-0 { background-color: rgb(84, 146, 255); }
+    .category-1 { background-color: rgb(105, 227, 82); }
+    .category-2 { background-color: rgb(251, 212, 0); }
+    .category-3 { background-color: rgb(223, 123, 234); }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .category-0 { background-color: rgb(27, 59, 112); }
+    .category-1 { background-color: rgb(30, 126, 10); }
+    .category-2 { background-color: rgb(123, 110, 34); }
+    .category-3 { background-color: rgb(106, 8, 117); }
+  }
+`;
+
 class Puzzle extends HTMLElement {
-  private gameState?: GameState;
-  private guesses: GuessModel[] = [];
-  private categories: CategoryModel[] = [];
-  private cards: CardModel[] = [];
-  private selected: Set<number> = new Set();
+  private _guesses: GuessModel[] = [];
+  private _categories: CategoryModel[] = [];
+  private _cards: CardModel[] = [];
+  private _selected: Set<number> = new Set();
 
   constructor() {
     super();
@@ -17,48 +71,46 @@ class Puzzle extends HTMLElement {
     this.render();
   }
 
+  get guesses() {
+    return this._guesses;
+  }
+
+  set guesses(guesses: GuessModel[]) {
+    this._guesses = guesses;
+  }
+
   private render() {
     if (!this.shadowRoot) return;
 
-    const categoriesHtml = this.categories
-      .map(
-        (category, i) => `
-        <div class="category-${category.difficulty}" data-key="${i}">
-          <h4>${category.title}</h4>
-          <h5>WORDS, WORDS, WORDS, WORDS</h5>
-        </div>
-      `,
-      )
-      .join("");
+    const categoryToHtml = (category: CategoryModel, i: number) => `
+      <div class="category-${category.difficulty}" data-key="${i}">
+        <h4>${category.title}</h4>
+        <h5>WORDS, WORDS, WORDS, WORDS</h5>
+      </div>`;
 
-    const cardsHtml = this.cards
+    const cardToHtml = (card: CardModel) => `
+      <label data-key="${card.id}">
+        <input
+          type="checkbox"
+          name="cards"
+          value="${card.position}"
+          ${this._selected.has(card.position) ? "checked" : ""}
+        />
+        ${card.content}
+      </label>`;
+
+    const categoriesHtml = this._categories.map(categoryToHtml).join("");
+    const cardsHtml = this._cards
       .toSorted(({ position: a }, { position: b }) => a - b)
-      .map(
-        (card) => `
-        <label data-key="${card.id}">
-          <input
-            type="checkbox"
-            name="cards"
-            value="${card.position}"
-            ${this.selected.has(card.position) ? "checked" : ""}
-          />
-          ${card.content}
-        </label>
-      `,
-      )
+      .map(cardToHtml)
       .join("");
 
     this.shadowRoot.innerHTML = `
-      <style></style>
-      <form action="{}">
-        <div id="puzzle">
-          <section id="categories">${categoriesHtml}</section>
-          <section id="cards">${cardsHtml}</section>
-          <section>
-            <input type="submit" value="GUESS" />
-          </section>
-        </div>
-      </form>
+      <style>${puzzleCss}</style>
+      <div id="puzzleContainer">
+        <section id="categories">${categoriesHtml}</section>
+        <section id="cards">${cardsHtml}</section>
+      </div>
     `;
   }
 
@@ -68,16 +120,18 @@ class Puzzle extends HTMLElement {
 
     const value = Number.parseInt(target.value, 10);
 
-    if (this.selected.delete(value)) {
+    if (this._selected.delete(value)) {
       target.checked = false;
     } else {
-      target.checked = this.selected.size < 4 && !!this.selected.add(value);
+      target.checked = this._selected.size < 4 && !!this._selected.add(value);
     }
   }
 
   public initialize(gameState: GameState, guesses: GuessModel[]) {
-    this.gameState = gameState;
-    this.guesses = guesses;
+    this._guesses = guesses;
+
+    this._categories = gameState.categories;
+    this._cards = gameState.cards;
 
     guesses
       .filter(({ category_id }) => category_id)
@@ -87,9 +141,9 @@ class Puzzle extends HTMLElement {
         );
 
         if (guessedCategory) {
-          this.categories.push(guessedCategory);
-          this.cards = [
-            ...this.cards.filter(
+          this._categories.push(guessedCategory);
+          this._cards = [
+            ...this._cards.filter(
               ({ category_id: id }) => guessCategoryId !== id,
             ),
           ];
