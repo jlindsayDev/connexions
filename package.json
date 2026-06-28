@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun src/index.html",
+    "dev": "bun src/server.ts",
     "archive": "bun src/archive.ts",
     "build": "tsc && vite build",
     "preview": "vite preview",
