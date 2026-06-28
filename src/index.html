@@ -5,57 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Connexions</title>
 
-    <!--<link rel="stylesheet" href="styles.css" />-->
     <style type="text/css">
       * {
         font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-        /* margin: 0;
-    padding: 0; */
         box-sizing: border-box;
       }
 
       body {
         background: #fafafa;
         color: #000;
-        overflow: hidden;
         padding: 0;
 
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        grid-template-columns: 100%;
+
         min-height: 100dvh;
-        min-width: 0;
         max-width: 500px;
         margin: 0 auto;
-        /* display: flex;
-    flex-direction: column; */
 
         @media (prefers-color-scheme: dark) {
           background-color: #333;
         }
       }
 
-      body {
-        display: grid;
-        grid-template-rows: auto 1fr auto;
-        grid-template-columns: 100%;
-      }
-
       header,
       nav,
       footer {
         text-align: center;
-        justify-content: space-between;
-        align-items: center;
         padding: 1rem 0rem;
-      }
-
-      main {
-        display: grid;
-        grid-template-rows: auto 1fr;
-        grid-template-columns: 100%;
-
-        justify-content: center;
-        align-items: center;
-
-        border: 1px solid green;
       }
     </style>
 
@@ -67,14 +45,7 @@
     <header id="header">HEADER</header>
 
     <main id="root">
-      <div id="calendar">
-        <form id="info">
-          Begin the app at
-          <input type="number" name="month" min="1" max="12" value="1" />
-          <input type="number" name="year" min="2018" max="2026" value="2026" />
-          <input type="submit" />
-        </form>
-      </div>
+      <div id="calendar"></div>
       <div id="puzzle"></div>
     </main>
 
@@ -82,36 +53,12 @@
   </body>
 
   <script defer type="text/javascript">
-    const createCalendar = (year, month) => {
-      const d = new Date();
-
-      const calendar = document.createElement("calendar-component");
-      calendar.year = year || d.getFullYear();
-      calendar.month = month || d.getMonth();
-      return calendar;
-    };
-
-    const _createPuzzle = (year, month, day) => {
-      const d = new Date();
-
-      const puzzle = document.createElement("puzzle-component");
-      puzzle.year = year || d.getFullYear();
-      puzzle.month = month || d.getMonth();
-      puzzle.day = day || d.getDate();
-      // puzzle.gameState = null;
-      // puzzle.guesses = null;
-      return puzzle;
-    };
-
     document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("calendar").replaceWith(createCalendar());
-    });
-
-    document.getElementById("info").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const form = new FormData(e.target);
-      const calendar = createCalendar(form.get("month"), form.get("year"));
-      e.target.replaceWith(calendar);
+      const d = new Date();
+      const calendar = document.createElement("calendar-component");
+      calendar.year = d.getFullYear();
+      calendar.month = d.getMonth();
+      document.getElementById("calendar").replaceChildren(calendar);
     });
   </script>
 </html>
