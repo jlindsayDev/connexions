@@ -47,3 +47,18 @@ export type GameState = {
 export type PlayState = {
   guesses: GuessModel[];
 };
+
+export type CardResponseModel = {
+  content: string;
+  position: number;
+};
+export type CategoryResponseModel = {
+  title: string;
+  cards: CardResponseModel[];
+};
+export type PuzzleResponseModel = {
+  id: number;
+  status: string;
+  print_date: string;
+  categories: CategoryResponseModel[];
+};
