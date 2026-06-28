@@ -1,7 +1,12 @@
+import type { GameState, GuessModel } from "models";
 import { padNums } from "utils";
 
 const calendarCss = `
-  #calendar-nav {
+  #calendarContainer {
+
+  }
+
+  #nav {
     display: flex;
     text-align: center;
     justify-content: space-between;
@@ -91,12 +96,16 @@ export class Calendar extends HTMLElement {
     this.render();
   };
 
-  private handleSelect = (e: Event) => {
+  private handleSelect = async (e: Event) => {
     const target = e.target as HTMLElement;
     if (target.classList.contains("day")) {
       const day = Number.parseInt(target.textContent || "0", 10);
-      const printDate = padNums(this._year, this._month, day);
-      console.debug(`Clicked initializePuzzle: ${printDate}`);
+      const gameState = await fetchFreshPuzzle(this._year, this._month, day);
+      const guesses = [] as GuessModel[]; // TODO: fetch guesses
+
+      const puzzle = document.createElement("puzzle-component");
+      puzzle.initialize(gameState, guesses);
+      document.getElementById("puzzle")?.replaceChildren(puzzle);
     }
   };
 
@@ -122,18 +131,19 @@ export class Calendar extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>${calendarCss}</style>
+      <div id="calendarContainer">
+        <section id="nav">
+          <button id="btn-prev">&larr;</button>
+          <span>${monthName} ${this._year}</span>
+          <button id="btn-next">&rarr;</button>
+        </section>
 
-      <section id="calendar-nav">
-        <button id="btn-prev">&larr;</button>
-        <span>${monthName} ${this._year}</span>
-        <button id="btn-next">&rarr;</button>
-      </section>
-
-      <section id="calendar">
-        ${headers}
-        ${emptyCells}
-        ${days}
-      </section>
+        <section id="calendar">
+          ${headers}
+          ${emptyCells}
+          ${days}
+        </section>
+      </div>
     `;
 
     this.shadowRoot
@@ -147,6 +157,13 @@ export class Calendar extends HTMLElement {
       ?.addEventListener("click", this.handleSelect);
   }
 }
+
+const fetchFreshPuzzle = async (year: number, month: number, day: number) => {
+  const printDate = `/day/${padNums(year, month + 1, day)}`;
+  const puzzleResponse = await fetch(printDate);
+  // TODO: error handling
+  return (await puzzleResponse.json()) as GameState;
+};
 
 customElements.define("calendar-component", Calendar);
 
