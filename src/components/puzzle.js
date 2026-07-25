@@ -1,10 +1,3 @@
-import type {
-  CardModel,
-  CategoryModel,
-  GameState,
-  GuessModel,
-} from "../models";
-
 const puzzleCss = `
   #puzzleContainer {
     display: flex;
@@ -62,9 +55,9 @@ const puzzleCss = `
 `;
 
 export class Puzzle extends HTMLElement {
-  private _guessedCategories: CategoryModel[] = [];
-  private _cards: CardModel[] = [];
-  private _selected: Set<number> = new Set();
+  _guessedCategories = [];
+  _cards = [];
+  _selected = new Set();
 
   constructor() {
     super();
@@ -76,16 +69,16 @@ export class Puzzle extends HTMLElement {
     this.render();
   }
 
-  private render() {
+  render() {
     if (!this.shadowRoot) return;
 
-    const categoryToHtml = (category: CategoryModel, i: number) => `
+    const categoryToHtml = (category, i) => `
       <div class="category-${category.difficulty}" data-key="${i}">
         <h4>${category.title}</h4>
         <h5>WORDS, WORDS, WORDS, WORDS</h5>
       </div>`;
 
-    const cardToHtml = (card: CardModel) => `
+    const cardToHtml = (card) => `
       <label data-key="${card.id}">
         <input
           type="checkbox"
@@ -118,12 +111,12 @@ export class Puzzle extends HTMLElement {
       ?.addEventListener("submit", this.tryGuess);
   }
 
-  private tryGuess(e: SubmitEvent) {
+  tryGuess(e) {
     e.preventDefault();
   }
 
-  private tryToggle(e: Event) {
-    const target = e.target as HTMLInputElement;
+  tryToggle(e) {
+    const target = e.target;
     if (target.name !== "cards") return;
 
     const value = Number.parseInt(target.value, 10);
@@ -135,7 +128,7 @@ export class Puzzle extends HTMLElement {
     }
   }
 
-  public initialize(gameState: GameState, guesses: GuessModel[]) {
+  initialize(gameState, guesses) {
     this._guesses = guesses;
     this._categories = gameState.categories;
     this._cards = gameState.cards;
@@ -160,9 +153,3 @@ export class Puzzle extends HTMLElement {
 }
 
 customElements.define("puzzle-component", Puzzle);
-
-declare global {
-  interface HTMLElementTagNameMap {
-    "puzzle-component": Puzzle;
-  }
-}

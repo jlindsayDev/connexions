@@ -1,8 +1,5 @@
 import { getGuesses } from "../db";
-import type { GameState } from "../models";
 import { padNums } from "../utils";
-
-import type { Puzzle } from "./puzzle";
 
 const calendarCss = `
   #calendarContainer {
@@ -40,8 +37,8 @@ const calendarCss = `
 `;
 
 export class Calendar extends HTMLElement {
-  private _month = 0;
-  private _year = 0;
+  _month = 0;
+  _year = 0;
 
   constructor() {
     super();
@@ -60,7 +57,7 @@ export class Calendar extends HTMLElement {
     return ["month", "year"];
   }
 
-  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+  attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue === newValue) return;
     if (name === "month") this._month = Number(newValue);
     if (name === "year") this._year = Number(newValue);
@@ -71,7 +68,7 @@ export class Calendar extends HTMLElement {
     return this._month;
   }
 
-  set month(value: number) {
+  set month(value) {
     this._month = value;
     this.setAttribute("month", String(value));
   }
@@ -80,12 +77,12 @@ export class Calendar extends HTMLElement {
     return this._year;
   }
 
-  set year(value: number) {
+  set year(value) {
     this._year = value;
     this.setAttribute("year", String(value));
   }
 
-  private decrement = () => {
+  decrement = () => {
     this._month--;
     if (this._month < 0) {
       this._month = 11;
@@ -94,7 +91,7 @@ export class Calendar extends HTMLElement {
     this.render();
   };
 
-  private increment = () => {
+  increment = () => {
     this._month++;
     if (this._month > 11) {
       this._month = 0;
@@ -103,20 +100,20 @@ export class Calendar extends HTMLElement {
     this.render();
   };
 
-  private handleSelect = async (e: Event) => {
-    const target = e.target as HTMLElement;
+  handleSelect = async (e) => {
+    const target = e.target;
     if (target.classList.contains("day")) {
       const day = Number.parseInt(target.textContent || "0", 10);
       const gameState = await fetchFreshPuzzle(this._year, this._month, day);
       const guesses = await getGuesses(gameState.puzzle);
 
-      const puzzle = document.createElement("puzzle-component") as Puzzle;
+      const puzzle = document.createElement("puzzle-component");
       puzzle.initialize(gameState, guesses);
       document.getElementById("puzzle")?.replaceChildren(puzzle);
     }
   };
 
-  private render() {
+  render() {
     if (!this.shadowRoot) return;
 
     const firstDay = new Date(this._year, this._month, 1);
@@ -165,17 +162,11 @@ export class Calendar extends HTMLElement {
   }
 }
 
-const fetchFreshPuzzle = async (year: number, month: number, day: number) => {
+const fetchFreshPuzzle = async (year, month, day) => {
   const printDate = `/day/${padNums(year, month + 1, day)}`;
   const puzzleResponse = await fetch(printDate);
   // TODO: error handling
-  return (await puzzleResponse.json()) as GameState;
+  return (await puzzleResponse.json());
 };
 
 customElements.define("calendar-component", Calendar);
-
-declare global {
-  interface HTMLElementTagNameMap {
-    "calendar-component": Calendar;
-  }
-}

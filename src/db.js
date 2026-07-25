@@ -1,19 +1,18 @@
-import * as models from "./models";
 import { fromBase64, pad, toBase64 } from "./utils";
 
 const DB_NAME = "PuzzlesDatabase";
 const DB_VERSION = 1;
 
-let dbInstance: IDBDatabase | null = null;
+let dbInstance = null;
 
-const getDB = (): Promise<IDBDatabase> => {
+const getDB = () => {
   if (dbInstance) return Promise.resolve(dbInstance);
 
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
+      const db = event.target.result;
 
       if (!db.objectStoreNames.contains("puzzles")) {
         const store = db.createObjectStore("puzzles", {
@@ -50,23 +49,22 @@ const getDB = (): Promise<IDBDatabase> => {
     };
 
     request.onsuccess = (event) => {
-      dbInstance = (event.target as IDBOpenDBRequest).result;
+      dbInstance = event.target.result;
       resolve(dbInstance);
     };
 
-    request.onerror = (event) =>
-      reject((event.target as IDBOpenDBRequest).error);
+    request.onerror = (event) => reject(event.target.error);
   });
 };
 
-const toPromise = <T>(request: IDBRequest<T>): Promise<T> => {
+const toPromise = (request) => {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
 };
 
-export const fetchDaysDownloaded = async (date: Date) => {
+export const fetchDaysDownloaded = async (date) => {
   const year = date.getFullYear();
   const month = date.getMonth();
   const prefix = `${year}-${pad(month + 1)}-`;
@@ -85,18 +83,12 @@ export const fetchDaysDownloaded = async (date: Date) => {
   return Object.fromEntries(days);
 };
 
-export const fetchGameState = async ({
-  puzzle_id,
-  print_date,
-}: {
-  puzzle_id?: number;
-  print_date?: string;
-}): Promise<models.GameState | null> => {
+export const fetchGameState = async ({ puzzle_id, print_date }) => {
   const db = await getDB();
   const tx = db.transaction(["puzzles", "cards", "categories"], "readonly");
   const puzzleStore = tx.objectStore("puzzles");
 
-  let puzzleReq: IDBRequest;
+  let puzzleReq;
   if (puzzle_id !== undefined) {
     puzzleReq = puzzleStore.get(puzzle_id);
   } else if (print_date !== undefined) {
@@ -108,18 +100,18 @@ export const fetchGameState = async ({
   const puzzle = await toPromise(puzzleReq);
   if (!puzzle) return null;
 
-  const cards = (await toPromise(
+  const cards = await toPromise(
     tx.objectStore("cards").index("puzzle_id").getAll(puzzle.id),
-  )) as models.CardModel[];
-  const categories = (await toPromise(
+  );
+  const categories = await toPromise(
     tx.objectStore("categories").index("puzzle_id").getAll(puzzle.id),
-  )) as models.CategoryModel[];
+  );
 
-  const decodedCards = cards.map((c: models.CardModel) => ({
+  const decodedCards = cards.map((c) => ({
     ...c,
     content: fromBase64(c.content),
   }));
-  const decodedCategories = categories.map((c: models.CategoryModel) => ({
+  const decodedCategories = categories.map((c) => ({
     ...c,
     title: fromBase64(c.title),
   }));
@@ -127,11 +119,7 @@ export const fetchGameState = async ({
   return { puzzle, cards: decodedCards, categories: decodedCategories };
 };
 
-export const addGameState = async ({
-  puzzle,
-  cards,
-  categories,
-}: models.GameState): Promise<number> => {
+export const addGameState = async ({ puzzle, cards, categories }) => {
   const validCards = cards && cards.length === 16;
   const validCategories = categories && categories.length === 4;
   const isValid = validCards && validCategories;
@@ -139,14 +127,14 @@ export const addGameState = async ({
   const db = await getDB();
   const tx = db.transaction(["puzzles", "categories", "cards"], "readwrite");
 
-  const puzzle_id = (await toPromise(
+  const puzzle_id = await toPromise(
     tx.objectStore("puzzles").add({
       print_date: puzzle.print_date,
       status: isValid
         ? models.PuzzleStatusEnum.NotAttempted
         : models.PuzzleStatusEnum.Broken,
     }),
-  )) as number;
+  );
 
   if (!isValid) return puzzle_id;
 
@@ -158,13 +146,13 @@ export const addGameState = async ({
       continue;
     }
 
-    const category_id = (await toPromise(
+    const category_id = await toPromise(
       tx.objectStore("categories").add({
         puzzle_id,
         difficulty: i,
         title: toBase64(category.title),
       }),
-    )) as number;
+    );
 
     const catCards = cardMapping.get(category.id) || [];
     for (const card of catCards) {
@@ -183,27 +171,24 @@ export const addGameState = async ({
 };
 
 export const addGuess = async (
-  { id: puzzle_id }: models.PuzzleModel,
-  guess: string,
-  category_id: number | null = null,
-): Promise<models.GuessModel> => {
+  { id: puzzle_id },
+  guess,
+  category_id = null,
+) => {
   const db = await getDB();
   const tx = db.transaction("guesses", "readwrite");
   const store = tx.objectStore("guesses");
 
-  const guess_id = (await toPromise(
+  const guess_id = await toPromise(
     store.add({ puzzle_id, category_id, guess }),
-  )) as number;
+  );
   const guessObj = await toPromise(store.get(guess_id));
 
   if (!guessObj) throw new Error("Guess was not properly added");
   return guessObj;
 };
 
-export const getGuess = async (
-  { id: puzzle_id }: models.PuzzleModel,
-  guess: string,
-): Promise<models.GuessModel | undefined> => {
+export const getGuess = async ({ id: puzzle_id }, guess) => {
   const db = await getDB();
   const tx = db.transaction("guesses", "readonly");
   return toPromise(
@@ -211,9 +196,7 @@ export const getGuess = async (
   );
 };
 
-export const getGuesses = async ({
-  id: puzzle_id,
-}: models.PuzzleModel): Promise<models.GuessModel[]> => {
+export const getGuesses = async ({ id: puzzle_id }) => {
   const db = await getDB();
   const tx = db.transaction("guesses", "readonly");
   return toPromise(
@@ -221,7 +204,7 @@ export const getGuesses = async ({
   );
 };
 
-export const resetData = async (): Promise<void> => {
+export const resetData = async () => {
   if (confirm("Delete all data?")) {
     const db = await getDB();
     const tx = db.transaction(db.objectStoreNames, "readwrite");
@@ -231,11 +214,8 @@ export const resetData = async (): Promise<void> => {
   }
 };
 
-const exportStores = async <T extends never>(
-  db: IDBDatabase,
-  storeNames: string[],
-) => {
-  const data: Record<string, T[]> = {};
+const exportStores = async (db, storeNames) => {
+  const data = {};
   const tx = db.transaction(storeNames, "readonly");
   for (const name of storeNames) {
     data[name] = await toPromise(tx.objectStore(name).getAll());
@@ -256,22 +236,20 @@ export const exportData = async () => {
   await download(guessBlob, `guesses-${dateStr}.idb.json.gz`);
 };
 
-const download = async (blob: Blob, filename: string, compress = true) => {
-  let blobUrl: string;
+const download = async (blob, filename, compress = true) => {
+  let blobUrl;
 
   if (compress) {
     const compressedStream = blob
       .stream()
-      .pipeThrough(
-        new CompressionStream("gzip") as unknown as ReadableWritablePair,
-      );
+      .pipeThrough(new CompressionStream("gzip"));
     const compressedBlob = await new Response(compressedStream).blob();
     blobUrl = URL.createObjectURL(compressedBlob);
   } else {
     blobUrl = URL.createObjectURL(blob);
   }
 
-  const aElem: HTMLAnchorElement = document.createElement("a");
+  const aElem = document.createElement("a");
   aElem.href = blobUrl;
   aElem.download = filename;
   aElem.type = "application/json";
@@ -281,12 +259,10 @@ const download = async (blob: Blob, filename: string, compress = true) => {
   URL.revokeObjectURL(blobUrl);
 };
 
-export const upload = async (blob: Blob) => {
+export const upload = async (blob) => {
   const decompressionStream = blob
     .stream()
-    .pipeThrough(
-      new DecompressionStream("gzip") as unknown as ReadableWritablePair,
-    );
+    .pipeThrough(new DecompressionStream("gzip"));
   const decompressedBlob = await new Response(decompressionStream).blob();
   const text = await decompressedBlob.text();
   const data = JSON.parse(text);
@@ -306,7 +282,7 @@ export const upload = async (blob: Blob) => {
     }
   }
 
-  return new Promise<void>((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });

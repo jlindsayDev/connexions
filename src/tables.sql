@@ -1,0 +1,28 @@
+CREATE TABLE IF NOT EXISTS puzzles (
+    id INTEGER PRIMARY KEY,
+    print_date TEXT UNIQUE NOT NULL,
+    nyt_id INTEGER UNIQUE,
+    difficulty SHORT INTEGER
+) STRICT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS puzzles_by_print_date ON puzzles (print_date);
+
+CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY,
+    puzzle_id INTEGER NOT NULL,
+    difficulty SHORT INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    hint_card_id INTEGER UNIQUE,
+    FOREIGN KEY (puzzle_id) REFERENCES puzzles(id),
+    FOREIGN KEY (hint_card_id) REFERENCES cards(id)
+) STRICT;
+
+CREATE TABLE IF NOT EXISTS cards (
+    id INTEGER PRIMARY KEY,
+    puzzle_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    position SHORT INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    FOREIGN KEY (puzzle_id) REFERENCES puzzles(id),
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+) STRICT;

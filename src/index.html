@@ -37,22 +37,24 @@
       }
     </style>
 
-    <script defer type="module" src="./calendar.js"></script>
-    <script defer type="module" src="./puzzle.js"></script>
+    <script type="module" src="./components/calendar.js"></script>
+    <script type="module" src="./components/puzzle.js"></script>
   </head>
 
   <body>
     <header id="header">HEADER</header>
 
     <main id="root">
-      <div id="calendar"></div>
-      <div id="puzzle"></div>
+      <calendar-component />
+      <puzzle-component />
+      <!--<div id="calendar"></div>
+      <div id="puzzle"></div>-->
     </main>
 
     <footer id="result">FOOTER</footer>
   </body>
 
-  <script defer type="text/javascript">
+  <!--<script defer type="text/javascript">
     document.addEventListener("DOMContentLoaded", () => {
       const d = new Date();
       const calendar = document.createElement("calendar-component");
@@ -60,5 +62,5 @@
       calendar.month = d.getMonth();
       document.getElementById("calendar").replaceChildren(calendar);
     });
-  </script>
+  </script>-->
 </html>
