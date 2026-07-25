@@ -1,5 +1,7 @@
 # jlindsaydev ignore
 .certificates
+.wrangler
+.zed
 
 # dependencies (bun install)
 node_modules
