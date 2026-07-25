@@ -1,5 +1,5 @@
-import { getGuesses } from "../db";
-import { padNums } from "../utils";
+import { getGuesses } from "../db.js";
+import { padNums } from "../utils.js";
 
 const calendarCss = `
   #calendarContainer {

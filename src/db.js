@@ -1,4 +1,4 @@
-import { fromBase64, pad, toBase64 } from "./utils";
+import { fromBase64, pad, toBase64 } from "./utils.js";
 
 const DB_NAME = "PuzzlesDatabase";
 const DB_VERSION = 1;
