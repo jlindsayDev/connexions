@@ -4,15 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun src/server.ts",
-    "archive": "bun src/archive.ts",
-    "lint": "bunx @biomejs/biome lint --write --unsafe ./src"
+    "dev": "nubx wrangler dev",
+    "lint": "nubx @biomejs/biome lint --write --unsafe ./src",
+    "publish": "nubx wrangler publish"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
+    "@biomejs/biome": "^2.5.2",
+    "@cloudflare/workers-types": "^5.20260703.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260702.3",
+    "@types/node": "^26.1.0",
     "@types/bun": "^1.3.14",
     "fake-indexeddb": "^6.2.5",
-    "typescript": "~5.9.3"
+    "wrangler": "^4.107.0"
   }
 }

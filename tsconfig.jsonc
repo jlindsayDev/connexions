@@ -1,10 +1,10 @@
+// https://devblogs.microsoft.com/typescript/announcing-typescript-7-0-beta/#updates-since-5.x-and-new-behaviors-from-6.0
 {
   "compilerOptions": {
-    "target": "ESNext",
+    // "target": "ESNext",
     "useDefineForClassFields": false,
     "module": "ESNext",
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
-    "types": ["bun"],
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -27,7 +27,8 @@
     "noPropertyAccessFromIndexSignature": true,
 
     // Project-specific stuff
-    "baseUrl": "./src",
+    "rootDir": "./src",
+    "types": ["node", "@types/node", "@types/bun", "@cloudflare/workers-types"],
   },
-  "include": ["src", "misc"],
+  "include": ["./src", "./misc"],
 }

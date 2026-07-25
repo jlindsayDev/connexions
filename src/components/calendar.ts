@@ -1,5 +1,8 @@
-import type { GameState, GuessModel } from "models";
-import { padNums } from "utils";
+import { getGuesses } from "../db";
+import type { GameState } from "../models";
+import { padNums } from "../utils";
+
+import type { Puzzle } from "./puzzle";
 
 const calendarCss = `
   #calendarContainer {
@@ -43,6 +46,10 @@ export class Calendar extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+
+    const d = new Date();
+    this._year = d.getFullYear();
+    this._month = d.getMonth();
   }
 
   connectedCallback() {
@@ -101,9 +108,9 @@ export class Calendar extends HTMLElement {
     if (target.classList.contains("day")) {
       const day = Number.parseInt(target.textContent || "0", 10);
       const gameState = await fetchFreshPuzzle(this._year, this._month, day);
-      const guesses = [] as GuessModel[]; // TODO: fetch guesses
+      const guesses = await getGuesses(gameState.puzzle);
 
-      const puzzle = document.createElement("puzzle-component");
+      const puzzle = document.createElement("puzzle-component") as Puzzle;
       puzzle.initialize(gameState, guesses);
       document.getElementById("puzzle")?.replaceChildren(puzzle);
     }

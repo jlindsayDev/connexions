@@ -1,4 +1,9 @@
-import type { CardModel, CategoryModel, GameState, GuessModel } from "./models";
+import type {
+  CardModel,
+  CategoryModel,
+  GameState,
+  GuessModel,
+} from "../models";
 
 const puzzleCss = `
   #puzzleContainer {
@@ -56,9 +61,7 @@ const puzzleCss = `
   }
 `;
 
-class Puzzle extends HTMLElement {
-  private _guesses: GuessModel[] = [];
-  private _categories: CategoryModel[] = [];
+export class Puzzle extends HTMLElement {
   private _guessedCategories: CategoryModel[] = [];
   private _cards: CardModel[] = [];
   private _selected: Set<number> = new Set();
@@ -134,7 +137,6 @@ class Puzzle extends HTMLElement {
 
   public initialize(gameState: GameState, guesses: GuessModel[]) {
     this._guesses = guesses;
-
     this._categories = gameState.categories;
     this._cards = gameState.cards;
 

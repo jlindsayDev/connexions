@@ -1,0 +1,10 @@
+"$schema" = "./node_modules/wrangler/config-schema.json"
+
+name = "connexions"
+main = "./src/server.ts"
+compatibility_date = "2026-07-03"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "connexions"
+database_id = "8cd74f09-012f-4fb0-ab99-b9becc074cbf"
