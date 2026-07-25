@@ -163,10 +163,12 @@ export class Calendar extends HTMLElement {
 }
 
 const fetchFreshPuzzle = async (year, month, day) => {
-  const printDate = `/day/${padNums(year, month + 1, day)}`;
-  const puzzleResponse = await fetch(printDate);
-  // TODO: error handling
-  return (await puzzleResponse.json());
+  const printDate = padNums(year, month + 1, day);
+
+  const puzzleResponse = await fetch(`/puzzles/${printDate}`);
+  const data = await puzzleResponse.json();
+  console.log(data);
+  return data;
 };
 
 customElements.define("calendar-component", Calendar);
