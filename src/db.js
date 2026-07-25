@@ -6,7 +6,9 @@ const DB_VERSION = 1;
 let dbInstance = null;
 
 const getDB = () => {
-  if (dbInstance) return Promise.resolve(dbInstance);
+  if (dbInstance) {
+    return Promise.resolve(dbInstance);
+  }
 
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -21,6 +23,7 @@ const getDB = () => {
         });
         store.createIndex("print_date", "print_date", { unique: true });
       }
+
       if (!db.objectStoreNames.contains("categories")) {
         const store = db.createObjectStore("categories", {
           keyPath: "id",
@@ -28,6 +31,7 @@ const getDB = () => {
         });
         store.createIndex("puzzle_id", "puzzle_id", { unique: false });
       }
+
       if (!db.objectStoreNames.contains("cards")) {
         const store = db.createObjectStore("cards", {
           keyPath: "id",
@@ -36,6 +40,7 @@ const getDB = () => {
         store.createIndex("puzzle_id", "puzzle_id", { unique: false });
         store.createIndex("category_id", "category_id", { unique: false });
       }
+
       if (!db.objectStoreNames.contains("guesses")) {
         const store = db.createObjectStore("guesses", {
           keyPath: "id",
@@ -98,7 +103,9 @@ export const fetchGameState = async ({ puzzle_id, print_date }) => {
   }
 
   const puzzle = await toPromise(puzzleReq);
-  if (!puzzle) return null;
+  if (!puzzle) {
+    return null;
+  }
 
   const cards = await toPromise(
     tx.objectStore("cards").index("puzzle_id").getAll(puzzle.id),
@@ -136,7 +143,9 @@ export const addGameState = async ({ puzzle, cards, categories }) => {
     }),
   );
 
-  if (!isValid) return puzzle_id;
+  if (!isValid) {
+    return puzzle_id;
+  }
 
   const cardMapping = Map.groupBy(cards, ({ category_id }) => category_id);
 
@@ -184,7 +193,9 @@ export const addGuess = async (
   );
   const guessObj = await toPromise(store.get(guess_id));
 
-  if (!guessObj) throw new Error("Guess was not properly added");
+  if (!guessObj) {
+    throw new Error("Guess was not properly added");
+  }
   return guessObj;
 };
 
@@ -272,7 +283,9 @@ export const upload = async (blob) => {
     db.objectStoreNames.contains(name),
   );
 
-  if (storeNames.length === 0) return;
+  if (storeNames.length === 0) {
+    return;
+  }
 
   const tx = db.transaction(storeNames, "readwrite");
   for (const storeName of storeNames) {
