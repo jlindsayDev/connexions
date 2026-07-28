@@ -44,12 +44,12 @@ const _parseResponseJson = async (json, encrypt = true) => {
 
 if (process.argv.length < 3) {
   process.stderr.write(
-    `Usage: ${process.argv[0]} ${process.argv[1]} outdir startdate numdays`,
+    `Usage: ${process.argv[0]} ${process.argv[1]} outfile startdate numdays`,
   );
   process.exit(2);
 }
 
-const outDir = process.argv[2];
+const outFile = process.argv[2];
 const startDate = process.argv[3];
 const numDays = Number.parseInt(process.argv[4], 10);
 
@@ -69,13 +69,13 @@ try {
 
 for (const puzzle of puzzlesFromJson) {
   fields = [`'${puzzle.print_date}'`, Number.parseInt(puzzle.id, 10)];
-  puzzleValues.push(`  (${fields.join(", ")})`);
+  puzzleValues.push(`(${fields.join(", ")})`);
 
   const tempPuzzleId = Date.parse(puzzle.print_date);
   for (const difficulty in puzzle.categories) {
     const category = puzzle.categories[difficulty];
     fields = [tempPuzzleId, difficulty, `'${toBase64(category.title)}'`];
-    categoryValues.push(`  (${fields.join(", ")})`);
+    categoryValues.push(`(${fields.join(", ")})`);
 
     const tempCategoryId = Number.parseInt(`${tempPuzzleId}${difficulty}`, 10);
     for (const card of category.cards) {
@@ -85,54 +85,34 @@ for (const puzzle of puzzlesFromJson) {
         card.position,
         `'${toBase64(card.content)}'`,
       ];
-      cardValues.push(`  (${fields.join(", ")})`);
+      cardValues.push(`(${fields.join(", ")})`);
     }
   }
 }
 
-let outfile;
-let sqlfile;
+const sql = `
+  PRAGMA defer_foreign_keys = true;
 
-outfile = `${outDir}/puzzles.sql`;
-sqlfile = `
-INSERT INTO puzzles (print_date, nyt_id) VALUES
-${puzzleValues.join(",\n")}
-RETURNING id, print_date;
-`;
-try {
-  await fs.writeFile(outfile, sqlfile);
-} catch (err) {
-  process.stderr.write(`Error occurred writing puzzles to ${outfile}`, err);
-  process.exit(7);
-}
-console.info(`Wrote ${puzzleValues.length} puzzles to ${outfile}`);
+  INSERT INTO puzzles (print_date, nyt_id) VALUES
+    ${puzzleValues.join(",\n    ")}
+  RETURNING id, print_date;
 
-outfile = `${outDir}/categories.sql`;
-sqlfile = `
-PRAGMA defer_foreign_keys = true;
-INSERT INTO categories (puzzle_id, difficulty, content) VALUES
-${categoryValues.join(",\n")}
-RETURNING id, puzzle_id, difficulty;
-`;
-try {
-  await fs.writeFile(outfile, sqlfile);
-} catch (err) {
-  process.stderr.write(`Error occurred writing categories to ${outfile}`, err);
-  process.exit(11);
-}
-console.info(`Wrote ${categoryValues.length} categories to ${outfile}`);
+  INSERT INTO categories (puzzle_id, difficulty, content) VALUES
+    ${categoryValues.join(",\n    ")}
+  RETURNING id, puzzle_id, difficulty;
 
-outfile = `${outDir}/cards.sql`;
-sqlfile = `
-PRAGMA defer_foreign_keys = true;
-INSERT INTO cards (puzzle_id, category_id, position, content) VALUES
-${cardValues.join(",\n")}
-RETURNING id, puzzle_id, category_id, position;
+  INSERT INTO cards (puzzle_id, category_id, position, content) VALUES
+    ${cardValues.join(",\n    ")}
+  RETURNING id, puzzle_id, category_id, position;
 `;
+
 try {
-  await fs.writeFile(outfile, sqlfile);
+  await fs.writeFile(outFile, sql);
 } catch (err) {
-  process.stderr.write(`Error occurred writing cards to ${outfile}`, err);
+  process.stderr.write(`Error occurred writing SQL to ${outFile}`, err);
   process.exit(13);
 }
-console.info(`Wrote ${cardValues.length} card records to ${outfile}`);
+
+console.info(`Wrote ${puzzleValues.length} puzzles`);
+console.info(`Wrote ${categoryValues.length} categories`);
+console.info(`Wrote ${cardValues.length} cards`);
