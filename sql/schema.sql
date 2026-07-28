@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY,
     puzzle_id INTEGER NOT NULL,
     difficulty INTEGER NOT NULL,
-    category TEXT NOT NULL,
+    content TEXT NOT NULL,
     hint_card_id INTEGER UNIQUE,
     FOREIGN KEY (puzzle_id) REFERENCES puzzles(id),
     FOREIGN KEY (hint_card_id) REFERENCES cards(id)
