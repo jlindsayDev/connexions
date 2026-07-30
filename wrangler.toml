@@ -4,7 +4,11 @@ name = "connexions"
 pages_build_output_dir = "src"
 compatibility_date = "2026-07-25"
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [[d1_databases]]
 binding = "DB"
 database_name = "connexions"
-database_id = "8cd74f09-012f-4fb0-ab99-b9becc074cbf"
+database_id = "4fbf6d1e-ca1d-4db9-ae65-0c5e21f2712d"
