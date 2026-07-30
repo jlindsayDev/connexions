@@ -13,16 +13,14 @@ CREATE TABLE IF NOT EXISTS categories (
     difficulty INTEGER NOT NULL,
     content TEXT NOT NULL,
     hint_card_id INTEGER UNIQUE,
-    FOREIGN KEY (puzzle_id) REFERENCES puzzles(id),
-    FOREIGN KEY (hint_card_id) REFERENCES cards(id)
+    FOREIGN KEY (puzzle_id) REFERENCES puzzles(id) ON DELETE CASCADE,
+    FOREIGN KEY (hint_card_id) REFERENCES cards(id) ON DELETE CASCADE
 ) STRICT;
 
 CREATE TABLE IF NOT EXISTS cards (
     id INTEGER PRIMARY KEY,
-    puzzle_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
     position INTEGER NOT NULL,
     content TEXT NOT NULL,
-    FOREIGN KEY (puzzle_id) REFERENCES puzzles(id),
-    FOREIGN KEY (category_id) REFERENCES categories(id)
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 ) STRICT;
