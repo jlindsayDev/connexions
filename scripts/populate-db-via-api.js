@@ -64,41 +64,72 @@ async function* puzzleIterator(startDate) {
   }
 }
 
+const indexBy = (arr, key) => arr.reduce((acc, el) => (acc[el[key]] = el), {});
+
+function* batched(iter, { key = "print_date", size = 5 }) {
+  while (true) {
+    yield iter.take(size);
+    // yield indexBy(iter.take(size), key);
+  }
+}
+
 let startDate = FIRST_DATE;
 if (process.argv[2]) {
   startDate = new Date(process.argv[2]);
 }
 
-const puzzleIter = puzzleIterator(startDate);
-for (const puzzle of puzzleIter) {
-  const d1Puzzle = await executeD1(
-    "INSERT INTO puzzles (print_date, nyt_id) VALUES (?, ?) RETURNING id;",
-    [puzzle.print_date, Number.parseInt(puzzle.id, 10)],
-  );
-  const puzzleId = d1Puzzle[0].id;
+const puzzleIter = batched(puzzleIterator(startDate), { size: 10 });
 
-  const puzzleCategories = puzzle.categories.map((category, difficulty) => [
-    puzzleId,
-    difficulty,
-    toBase64(category.title),
-  ]);
-
+for (const puzzles of puzzleIter) {
+  let records;
   let placeholders;
-  placeholders = puzzleCategories.map((_) => "(?, ?, ?)").join(", ");
+
+  records = puzzles.map((p) => [p.print_date, Number.parseInt(p.id, 10)]);
+  placeholders = records.map(() => "(?, ?)").join(", ");
+
+  const d1Puzzles = await executeD1(
+    `INSERT INTO puzzles (print_date, nyt_id)
+    VALUES ${placeholders}
+    RETURNING id, print_date, nyt_id;`,
+    records,
+  );
+
+  records = puzzles.flatMap((p) => {
+    const nytId = Number.parseInt(p.id, 10);
+    const puzzleId = d1Puzzles.find(({ nyt_id }) => nytId === nyt_id);
+    return p.categories.map((category, difficulty) => [
+      puzzleId,
+      difficulty,
+      toBase64(category.title),
+    ]);
+  });
+  placeholders = records.map((_) => "(?, ?, ?)").join(", ");
+
   const d1Categories = await executeD1(
-    `INSERT INTO categories (puzzle_id, difficulty, content) VALUES ${categoryPlaceholders} RETURNING id;`,
-    puzzleCategories,
+    `INSERT INTO categories (puzzle_id, difficulty, content)
+    VALUES ${categoryPlaceholders}
+    RETURNING id, puzzle_id, difficulty;`,
+    records,
   );
 
-  const puzzleCards = puzzle.categories.flatMap(({ cards }, i) =>
-    cards.map((card) => [
-      d1Categories[i].id,
-      card.position,
-      toBase64(card.content),
-    ]),
-  );
+  records = puzzles
+    .map((p) => {
+      const nytId = Number.parseInt(p.id, 10);
+      const puzzleId = d1Puzzles.find(({ nyt_id }) => nytId === nyt_id);
+      return [puzzleId, p.categories];
+    })
+    .flatMap((puzzleId, { cards }, i) => {
+      const category = d1Categories.find(
+        (c) => c.puzzle_id === puzzleId && c.difficulty === i,
+      );
+      return cards.map((card) => [
+        category.id,
+        card.position,
+        toBase64(card.content),
+      ]);
+    });
+  placeholders = records.map((_) => "(?, ?, ?)").join(", ");
 
-  placeholders = puzzleCards.map((_) => "(?, ?, ?)").join(", ");
   const _d1Cards = await executeD1(
     `INSERT INTO cards (category_id, position, content) VALUES ${placeholders};`,
     puzzleCards,
