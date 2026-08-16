@@ -12,10 +12,8 @@ export const onRequestOptions = async (_context) => {
 
 export const onRequestGet = async (context) => {
   const { date } = context.params;
-
-  const puzzleResponse = await context.env.DB.prepare(
-    "SELECT * FROM puzzles LIMIT 5",
-  ).run();
+  const query = "SELECT * FROM puzzles WHERE print_date = ?";
+  const puzzleResponse = await context.env.DB.prepare(query).bind(date).run();
 
   const response = Response.json(puzzleResponse);
   response.headers.set("Access-Control-Allow-Origin", "*");
