@@ -53,39 +53,35 @@ async function* batched(iterable, size = 5) {
     }
     break;
   }
-
-  // while (true) {
-  //   const { value, done } = await iter.next();
-  //   if (done) {
-  //     break;
-  //   }
-
-  //   yield async function* () {
-  //     yield value;
-  //     yield* await iter.take(size - 1);
-  //   };
-  // }
 }
+
+const bulkInsert = async (db, table, columns, items) => {
+  const statements = [];
+  query = `INSERT INTO ${table} (${columns.join(", ")})
+    VALUES ${placeholders}
+    RETURNING id, ${columns.join(", ")}`;
+
+  for (let i = 0; i < items.length;) {
+    statements.push(db.prepare(query).bind());
+  }
+  return await db.batch(statements);
+};
 
 export const onRequestGet = async (context) => {
   const dateStr = context.params.date || START_DATE_STR;
 
   for await (const puzzles of batched(puzzleIterator(dateStr), 10)) {
-    let records;
-    let placeholders;
+    let records = puzzles.flatMap((p) => [
+      p.print_date,
+      Number.parseInt(p.id, 10),
+    ]);
 
-    records = puzzles.flatMap((p) => [p.print_date, Number.parseInt(p.id, 10)]);
-    placeholders = Array.from({ length: puzzles.length }, () => "(?, ?)").join(
-      ", ",
+    const d1Puzzles = await bulkInsert(
+      context.env.DB,
+      "puzzles",
+      ["print_date", "nyt_id"],
+      records,
     );
-
-    const d1Puzzles = await context.env.DB.prepare(
-      `
-      INSERT INTO puzzles (print_date, nyt_id) VALUES ${placeholders}
-      RETURNING id, print_date, nyt_id;`,
-    )
-      .bind(...records)
-      .run();
 
     records = puzzles.flatMap((p) => {
       const nytId = Number.parseInt(p.id, 10);
@@ -96,18 +92,13 @@ export const onRequestGet = async (context) => {
         toBase64(category.title),
       ]);
     });
-    placeholders = Array.from(
-      { length: puzzles.length * 4 },
-      () => "(?, ?, ?)",
-    ).join(", ");
 
-    const d1Categories = await context.env.DB.prepare(
-      `
-      INSERT INTO categories (puzzle_id, difficulty, content) VALUES ${placeholders}
-      RETURNING id, puzzle_id, difficulty;`,
-    )
-      .bind(...records)
-      .run();
+    const d1Categories = await bulkInsert(
+      context.env.DB,
+      "categories",
+      ["puzzle_id", "difficulty", "content"],
+      records,
+    );
 
     records = puzzles.flatMap((p) => {
       const nytId = Number.parseInt(p.id, 10);
@@ -125,16 +116,13 @@ export const onRequestGet = async (context) => {
         ]);
       });
     });
-    placeholders = Array.from(
-      { length: puzzles.length * 4 * 4 },
-      () => "(?, ?, ?)",
-    ).join(", ");
 
-    await context.env.DB.prepare(
-      `INSERT INTO cards (category_id, position, content) VALUES ${placeholders};`,
-    )
-      .bind(...records)
-      .run();
+    const _d1Cards = await bulkInsert(
+      context.env.DB,
+      "cards",
+      ["category_id", "position", "content"],
+      records,
+    );
   }
 
   const response = Response.json({ success: true });
