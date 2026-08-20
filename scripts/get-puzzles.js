@@ -1,46 +1,7 @@
 import fs from "node:fs/promises";
 import process from "node:process";
-import { fromBase64, toBase64 } from "../src/utils.js";
-
-const fetchPuzzlesFromSource = async (startDateStr, numDays) => {
-  const startDate = new Date(startDateStr);
-  const ENCODED_URL =
-    "aHR0cHM6Ly93d3cubnl0aW1lcy5jb20vc3ZjL2Nvbm5lY3Rpb25zL3YyLw==";
-
-  const puzzles = [];
-  for (let i = 0; i < numDays; ++i) {
-    const date = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth(),
-      startDate.getDate() + 1 + i,
-    );
-    const dateStr = date.toISOString().slice(0, 10);
-    const url = `${fromBase64(ENCODED_URL)}${dateStr}.json`;
-
-    console.info(`HTTP GET ${url}`);
-    const responseJson = await (await fetch(url)).json();
-    puzzles.push(responseJson);
-  }
-  return puzzles;
-};
-
-const _parseResponseJson = async (json, encrypt = true) => {
-  const puzzle = {
-    nyt_id: json.id,
-    print_date: json.print_date,
-  };
-
-  const categories = json.categories.map(({ title, cards }, i) => ({
-    difficulty: i,
-    title: encrypt ? toBase64(title) : title,
-    cards: cards.map(({ position, content }) => ({
-      position,
-      content: encrypt ? toBase64(content) : content,
-    })),
-  }));
-
-  return { puzzle, categories };
-};
+import { fetchPuzzlesFromSource } from "../src/api.js";
+import { toBase64 } from "../src/utils.js";
 
 if (process.argv.length < 3) {
   process.stderr.write(

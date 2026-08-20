@@ -1,25 +1,20 @@
-export const requestNotifications = async (e) => {
-  const button = e.target;
-
-  const permission = await Notification.requestPermission();
-  if (permission === "granted") {
-    new Notification("LEVEL UP", { body: "You did it!" });
-    button.disabled = true;
-    // button.style.display = "none";
-  }
-};
-
 export const pad = (i) => i.toString().padStart(2, "0");
 export const padNums = (...ns) =>
   ns.map((n) => n.toString().padStart(2, "0")).join("-");
 export const padDate = (date) =>
   padNums(date.getFullYear(), date.getMonth(), date.getDate());
 
+export const getNextDate = (date, skip = 0) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1 + skip);
+
 export const range = (start, stop, step = 1) =>
   Array.from(
     { length: Math.ceil((stop - start) / step) },
     (_, i) => start + i * step,
   );
+
+export const indexBy = (arr, key) =>
+  arr.reduce((acc, el) => (acc[el[key]] = el), {});
 
 export const partition = (arr, partitionFn) =>
   arr.reduce(
@@ -45,9 +40,20 @@ export const toBase64 = (text) => {
   return btoa(binString);
 };
 
-export const fetchFreshPuzzle = async (year, month, day) => {
-  const printDate = padNums(year, month + 1, day);
-  const puzzleResponse = await fetch(`/puzzles/${printDate}`);
-  const data = await puzzleResponse.json();
-  return data;
+export const parseResponseJson = async (json, encrypt = true) => {
+  const puzzle = {
+    nyt_id: json.id,
+    print_date: json.print_date,
+  };
+
+  const categories = json.categories.map(({ title, cards }, i) => ({
+    difficulty: i,
+    title: encrypt ? toBase64(title) : title,
+    cards: cards.map(({ position, content }) => ({
+      position,
+      content: encrypt ? toBase64(content) : content,
+    })),
+  }));
+
+  return { puzzle, categories };
 };
