@@ -1,4 +1,5 @@
-import { fromBase64, toBase64 } from "../src/utils.js";
+import { batchedIterator } from "../src/api.js";
+import { toBase64 } from "../src/utils.js";
 
 const START_DATE_STR = "2024-04-27"; // "2023-06-12";
 
@@ -14,55 +15,14 @@ export const onRequestOptions = async (_context) => {
   });
 };
 
-const getNextDate = (date) =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
-
-const fetchPuzzleFromSource = async (date) => {
-  const ENCODED_URL =
-    "aHR0cHM6Ly93d3cubnl0aW1lcy5jb20vc3ZjL2Nvbm5lY3Rpb25zL3YyLw==";
-  const dateStr = date.toISOString().slice(0, 10);
-  const url = `${fromBase64(ENCODED_URL)}${dateStr}.json`;
-  const response = await fetch(url);
-  console.info(`HTTP GET [${response.status}] ${url}`);
-  return await response.json();
-};
-
-async function* puzzleIterator(startDateStr) {
-  let date = new Date(startDateStr);
-  while (true) {
-    try {
-      yield await fetchPuzzleFromSource(date);
-    } catch (err) {
-      const dateStr = date.toISOString().slice(0, 10);
-      process.stderr.write(`Error occurred fetching date ${dateStr}`, err);
-      return;
-    }
-    date = getNextDate(date);
-  }
-}
-
-async function* batched(iterable, size = 5) {
-  let items = [];
-  while (true) {
-    for await (const item of iterable) {
-      items.push(item);
-      if (items.length >= size) {
-        yield items;
-        items = [];
-      }
-    }
-    break;
-  }
-}
-
-const bulkInsert = async (db, table, columns, items) => {
+const batchInsert = async (db, table, columns, records) => {
   const statements = [];
   query = `INSERT INTO ${table} (${columns.join(", ")})
     VALUES ${placeholders}
     RETURNING id, ${columns.join(", ")}`;
 
-  for (let i = 0; i < items.length;) {
-    statements.push(db.prepare(query).bind());
+  for (const record of records) {
+    statements.push(db.prepare(query).bind(record));
   }
   return await db.batch(statements);
 };
@@ -70,13 +30,13 @@ const bulkInsert = async (db, table, columns, items) => {
 export const onRequestGet = async (context) => {
   const dateStr = context.params.date || START_DATE_STR;
 
-  for await (const puzzles of batched(puzzleIterator(dateStr), 10)) {
+  for await (const puzzles of batchedIterator(dateStr, 10)) {
     let records = puzzles.flatMap((p) => [
       p.print_date,
       Number.parseInt(p.id, 10),
     ]);
 
-    const d1Puzzles = await bulkInsert(
+    const d1Puzzles = await batchInsert(
       context.env.DB,
       "puzzles",
       ["print_date", "nyt_id"],
@@ -93,7 +53,7 @@ export const onRequestGet = async (context) => {
       ]);
     });
 
-    const d1Categories = await bulkInsert(
+    const d1Categories = await batchInsert(
       context.env.DB,
       "categories",
       ["puzzle_id", "difficulty", "content"],
@@ -117,7 +77,7 @@ export const onRequestGet = async (context) => {
       });
     });
 
-    const _d1Cards = await bulkInsert(
+    const _d1Cards = await batchInsert(
       context.env.DB,
       "cards",
       ["category_id", "position", "content"],
