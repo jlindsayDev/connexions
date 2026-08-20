@@ -1,4 +1,4 @@
-import { padNums } from "../utils.js";
+import { padNums } from "../lib/utils.js";
 
 const calendarCss = `
   #calendarContainer {

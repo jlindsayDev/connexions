@@ -1,4 +1,4 @@
-import { fetchFreshPuzzle } from "../client";
+import { fetchFreshPuzzle } from "../lib/client.js";
 
 const puzzleCss = `
   #puzzleContainer {

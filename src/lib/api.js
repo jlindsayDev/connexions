@@ -1,4 +1,4 @@
-import { fromBase64, getNextDate } from "../src/utils.js";
+import { fromBase64, getNextDate } from "./utils.js";
 
 export const fetchPuzzleFromSource = async (date) => {
   const ENCODED_URL =
