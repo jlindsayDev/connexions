@@ -1,6 +1,6 @@
 import process from "node:process";
-import { batchedIterator } from "../src/api.js";
-import { toBase64 } from "../src/utils.js";
+import { batchedIterator } from "../src/lib/api.js";
+import { toBase64 } from "../src/lib/utils.js";
 
 const req = (envvar, name) => {
   if (!envvar) {

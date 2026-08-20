@@ -1,5 +1,5 @@
-import { batchedIterator } from "../src/api.js";
-import { toBase64 } from "../src/utils.js";
+import { batchedIterator } from "../src/lib/api.js";
+import { toBase64 } from "../src/lib/utils.js";
 
 const START_DATE_STR = "2024-04-27"; // "2023-06-12";
 
