@@ -1,3 +1,5 @@
+import { fetchFreshPuzzle } from "../utils";
+
 const puzzleCss = `
   #puzzleContainer {
     display: flex;
@@ -55,6 +57,7 @@ const puzzleCss = `
 `;
 
 export class Puzzle extends HTMLElement {
+  _date = "";
   _guessedCategories = [];
   _cards = [];
   _selected = new Set();
@@ -66,7 +69,27 @@ export class Puzzle extends HTMLElement {
   }
 
   connectedCallback() {
+    this.initialize();
     this.render();
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue === newValue) return;
+    if (name === "date") this._date = newValue;
+    this.render();
+  }
+
+  static get observedAttributes() {
+    return ["date"];
+  }
+
+  get date() {
+    return this._date;
+  }
+
+  set date(value) {
+    this._date = value;
+    this.setAttribute("date", String(value));
   }
 
   render() {
@@ -128,9 +151,10 @@ export class Puzzle extends HTMLElement {
     }
   }
 
-  initialize(gameState, guesses) {
-    this._guesses = guesses;
-    this._categories = gameState.categories;
+  async initialize() {
+    const gameState = await fetchFreshPuzzle(this._year, this._month, day);
+    const guesses = []; //await getGuesses(gameState.puzzle);    this._categories = gameState.categories;
+
     this._cards = gameState.cards;
 
     guesses
