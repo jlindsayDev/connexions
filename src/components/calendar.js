@@ -1,4 +1,3 @@
-import { getGuesses } from "../db.js";
 import { padNums } from "../utils.js";
 
 const calendarCss = `
@@ -104,12 +103,14 @@ export class Calendar extends HTMLElement {
     const target = e.target;
     if (target.classList.contains("day")) {
       const day = Number.parseInt(target.textContent || "0", 10);
-      const gameState = await fetchFreshPuzzle(this._year, this._month, day);
-      const guesses = await getGuesses(gameState.puzzle);
-
       const puzzle = document.createElement("puzzle-component");
-      puzzle.initialize(gameState, guesses);
-      document.getElementById("puzzle")?.replaceChildren(puzzle);
+      puzzle.date = padNums(this._year, this._month, day);
+      puzzle.setAttribute("date", padNums(this._year, this._month, day));
+
+      // NOTE TO SELF: the puzzle component does not attach to this root
+      this.shadowRoot
+        .getElementById("calendarContainer")
+        ?.replaceChildren(puzzle);
     }
   };
 
@@ -161,14 +162,5 @@ export class Calendar extends HTMLElement {
       ?.addEventListener("click", this.handleSelect);
   }
 }
-
-const fetchFreshPuzzle = async (year, month, day) => {
-  const printDate = padNums(year, month + 1, day);
-
-  const puzzleResponse = await fetch(`/puzzles/${printDate}`);
-  const data = await puzzleResponse.json();
-  console.log(data);
-  return data;
-};
 
 customElements.define("calendar-component", Calendar);

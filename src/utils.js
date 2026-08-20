@@ -44,3 +44,10 @@ export const toBase64 = (text) => {
   ).join("");
   return btoa(binString);
 };
+
+export const fetchFreshPuzzle = async (year, month, day) => {
+  const printDate = padNums(year, month + 1, day);
+  const puzzleResponse = await fetch(`/puzzles/${printDate}`);
+  const data = await puzzleResponse.json();
+  return data;
+};
