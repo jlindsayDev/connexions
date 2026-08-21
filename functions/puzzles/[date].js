@@ -1,3 +1,5 @@
+import { fromBase64 } from "../../src/lib/utils";
+
 export const onRequestOptions = async (_context) => {
   return new Response(null, {
     status: 204,
