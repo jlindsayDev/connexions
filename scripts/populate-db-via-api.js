@@ -48,15 +48,15 @@ const insertPuzzles = async (puzzles) => {
   let placeholders = records.map(() => "(?, ?)").join(", ");
 
   const d1Puzzles = await executeD1(
-    `INSERT INTO puzzles (print_date, nyt_id)
+    `INSERT INTO puzzles (print_date, source_id)
     VALUES ${placeholders}
-    RETURNING id, print_date, nyt_id;`,
+    RETURNING id, print_date, source_id;`,
     records,
   );
 
   records = puzzles.flatMap((p) => {
-    const nytId = Number.parseInt(p.id, 10);
-    const puzzleId = d1Puzzles.find(({ nyt_id }) => nytId === nyt_id);
+    const sourceId = Number.parseInt(p.id, 10);
+    const puzzleId = d1Puzzles.find(({ source_id }) => sourceId === source_id);
     return p.categories.map((category, difficulty) => [
       puzzleId,
       difficulty,
@@ -74,8 +74,10 @@ const insertPuzzles = async (puzzles) => {
 
   records = puzzles
     .map((p) => {
-      const nytId = Number.parseInt(p.id, 10);
-      const puzzleId = d1Puzzles.find(({ nyt_id }) => nytId === nyt_id);
+      const sourceId = Number.parseInt(p.id, 10);
+      const puzzleId = d1Puzzles.find(
+        ({ source_id }) => sourceId === source_id,
+      );
       return [puzzleId, p.categories];
     })
     .flatMap((puzzleId, { cards }, i) => {
