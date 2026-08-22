@@ -1,5 +1,5 @@
 import { fetchFreshPuzzle } from "../lib/client.js";
-import { getGuesses } from "../lib/db.js";
+import * as db from "../lib/db.js";
 
 const puzzleCss = `
   #puzzleContainer {
@@ -62,6 +62,7 @@ export class Puzzle extends HTMLElement {
   _month = 0;
   _day = 0;
 
+  _gameState;
   _guessedCategories = [];
   _categories = [];
   _cards = [];
@@ -132,7 +133,7 @@ export class Puzzle extends HTMLElement {
 
     this.shadowRoot
       .getElementById("form")
-      ?.addEventListener("submit", this.tryGuess);
+      ?.addEventListener("submit", this.tryGuess.bind(this));
   }
 
   async initialize() {
@@ -141,8 +142,9 @@ export class Puzzle extends HTMLElement {
       this._month,
       this._day,
     );
-    const guesses = await getGuesses(gameState.puzzle);
+    const guesses = await db.getGuesses(gameState.puzzle);
 
+    this._gameState = gameState;
     this._categories = gameState.categories;
     this._cards = gameState.categories.flatMap((c) => c.cards);
 
@@ -177,8 +179,44 @@ export class Puzzle extends HTMLElement {
     }
   }
 
-  tryGuess(e) {
+  async tryGuess(e) {
     e.preventDefault();
+    e.stopPropagation();
+    if (!this._gameState || this._selected.size !== 4) return;
+
+    const guessStr = this._selected
+      .map((c) => c.id)
+      .sort()
+      .join(",");
+
+    const alreadyGuessed = await db.getGuess(this._gameState.puzzle, guessStr);
+    if (alreadyGuessed) {
+      console.error(
+        `Already tried WRONG guess: puzzle=${this._gameState.puzzle.id} ${guessStr}`,
+      );
+      return;
+    }
+
+    const categoryId = this._selected.values().next().category_id;
+    const correctGuess = this._selected
+      .values()
+      .every(({ category_id }) => categoryId === category_id);
+
+    if (!correctGuess) {
+      console.error("INCORRECT");
+      await db.addGuess(this._gameState.puzzle, guessStr);
+      return;
+    }
+
+    const guessedCategory = this._gameState.categories.find(
+      ({ id }) => categoryId === id,
+    );
+    if (guessedCategory) {
+      await db.addGuess(this._gameState.puzzle, guessStr, categoryId);
+      this._guessedCategories.push(guessedCategory);
+      this._cards = this._cards.filter((c) => !this._selected.includes(c));
+      this._selected.clear();
+    }
   }
 }
 
