@@ -1,3 +1,5 @@
+import { padNums } from "../lib/utils.js";
+
 export const requestNotifications = async (e) => {
   const button = e.target;
 

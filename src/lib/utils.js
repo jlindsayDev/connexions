@@ -1,6 +1,8 @@
 export const pad = (i) => i.toString().padStart(2, "0");
+
 export const padNums = (...ns) =>
   ns.map((n) => n.toString().padStart(2, "0")).join("-");
+
 export const padDate = (date) =>
   padNums(date.getFullYear(), date.getMonth(), date.getDate());
 
