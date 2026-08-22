@@ -36,19 +36,19 @@ const calendarCss = `
 `;
 
 export class Calendar extends HTMLElement {
-  _month = 0;
   _year = 0;
+  _month = 0;
 
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-
-    const d = new Date();
-    this._year = d.getFullYear();
-    this._month = d.getMonth();
   }
 
   connectedCallback() {
+    const d = new Date();
+    this._year = d.getFullYear();
+    this._month = d.getMonth();
+
     this.render();
   }
 
@@ -104,12 +104,12 @@ export class Calendar extends HTMLElement {
     if (target.classList.contains("day")) {
       const day = Number.parseInt(target.textContent || "0", 10);
       const puzzle = document.createElement("puzzle-component");
-      puzzle.date = padNums(this._year, this._month, day);
-      puzzle.setAttribute("date", padNums(this._year, this._month, day));
+      puzzle.year = this._year;
+      puzzle.month = this._month;
+      puzzle.day = day;
 
-      // NOTE TO SELF: the puzzle component does not attach to this root
       this.shadowRoot
-        .getElementById("calendarContainer")
+        .getElementById("puzzleContainer")
         ?.replaceChildren(puzzle);
     }
   };
@@ -149,6 +149,7 @@ export class Calendar extends HTMLElement {
           ${days}
         </section>
       </div>
+      <div id="puzzleContainer"></div>
     `;
 
     this.shadowRoot
