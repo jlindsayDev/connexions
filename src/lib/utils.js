@@ -42,12 +42,7 @@ export const toBase64 = (text) => {
   return btoa(binString);
 };
 
-export const parseResponseJson = async (json, encrypt = true) => {
-  const puzzle = {
-    nyt_id: json.id,
-    print_date: json.print_date,
-  };
-
+export const parseResponseJson = (json, encrypt = true) => {
   const categories = json.categories.map(({ title, cards }, i) => ({
     difficulty: i,
     title: encrypt ? toBase64(title) : title,
@@ -57,5 +52,9 @@ export const parseResponseJson = async (json, encrypt = true) => {
     })),
   }));
 
-  return { puzzle, categories };
+  return {
+    source_id: json.id,
+    print_date: json.print_date,
+    categories,
+  };
 };
