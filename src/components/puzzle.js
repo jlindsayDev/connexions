@@ -57,7 +57,10 @@ const puzzleCss = `
 `;
 
 export class Puzzle extends HTMLElement {
-  _date = "";
+  _year = 0;
+  _month = 0;
+  _day = 0;
+
   _guessedCategories = [];
   _cards = [];
   _selected = new Set();
@@ -83,13 +86,31 @@ export class Puzzle extends HTMLElement {
     return ["date"];
   }
 
-  get date() {
-    return this._date;
+  get year() {
+    return this._year;
   }
 
-  set date(value) {
-    this._date = value;
-    this.setAttribute("date", String(value));
+  set year(value) {
+    this._year = value;
+    this.setAttribute("year", String(value));
+  }
+
+  get month() {
+    return this._month;
+  }
+
+  set month(value) {
+    this._month = value;
+    this.setAttribute("month", String(value));
+  }
+
+  get day() {
+    return this._day;
+  }
+
+  set day(value) {
+    this._day = value;
+    this.setAttribute("day", String(value));
   }
 
   render() {
@@ -152,7 +173,11 @@ export class Puzzle extends HTMLElement {
   }
 
   async initialize() {
-    const gameState = await fetchFreshPuzzle(this._year, this._month, day);
+    const gameState = await fetchFreshPuzzle(
+      this._year,
+      this._month,
+      this._day,
+    );
     const guesses = []; //await getGuesses(gameState.puzzle);    this._categories = gameState.categories;
 
     this._cards = gameState.cards;
