@@ -97,27 +97,32 @@ export class Puzzle extends HTMLElement {
   render() {
     if (!this.shadowRoot) return;
 
-    const categoryToHtml = (category, i) => `
-      <div class="category-${category.difficulty}">
-        <h4>${category.title}</h4>
-        <h5>WORDS, WORDS, WORDS, WORDS</h5>
-      </div>`;
+    const categoriesHtml = this._guessedCategories
+      .map(
+        (category) => `
+          <div class="category-${category.difficulty}">
+            <h4>${category.title}</h4>
+            <h5>${category.cards.map((c) => c.content).join(", ")}</h5>
+          </div>`,
+      )
+      .join("");
 
-    const cardToHtml = (card) => `
-      <label>
-        <input
-          type="checkbox"
-          name="cards"
-          value="${card.position}"
-          ${this._selected.has(card.position) ? "checked" : ""}
-        />
-        ${card.content}
-      </label>`;
-
-    const categoriesHtml = this._guessedCategories.map(categoryToHtml).join("");
     const cardsHtml = this._cards
       .toSorted(({ position: a }, { position: b }) => a - b)
-      .map(cardToHtml)
+      .map(
+        (card) => `
+          <label>
+            <input
+              type="checkbox"
+              name="cards"
+              value="${card.difficulty}"
+              data-position="${card.position}"
+              data-difficulty="${card.difficulty}"
+              ${this._selected.has(card.position) ? "checked" : ""}
+            />
+            ${card.content}
+          </label>`,
+      )
       .join("");
 
     this.shadowRoot.innerHTML = `
@@ -157,11 +162,9 @@ export class Puzzle extends HTMLElement {
 
         if (guessedCategory) {
           this._guessedCategories.push(guessedCategory);
-          this._cards = [
-            ...this._cards.filter(
-              ({ category_id: id }) => guessCategoryId !== id,
-            ),
-          ];
+          this._cards = this._cards.filter(
+            ({ category_id: id }) => guessCategoryId !== id,
+          );
         }
       });
   }
@@ -184,10 +187,7 @@ export class Puzzle extends HTMLElement {
     e.stopPropagation();
     if (!this._gameState || this._selected.size !== 4) return;
 
-    const guessStr = this._selected
-      .map((c) => c.id)
-      .sort()
-      .join(",");
+    const guessStr = [...this._selected].sort().join(",");
 
     const alreadyGuessed = await db.getGuess(this._gameState.puzzle, guessStr);
     if (alreadyGuessed) {
@@ -214,7 +214,7 @@ export class Puzzle extends HTMLElement {
     if (guessedCategory) {
       await db.addGuess(this._gameState.puzzle, guessStr, categoryId);
       this._guessedCategories.push(guessedCategory);
-      this._cards = this._cards.filter((c) => !this._selected.includes(c));
+      this._cards = this._cards.filter((c) => !this._selected.has(c));
       this._selected.clear();
     }
   }
