@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS puzzles (
     id INTEGER PRIMARY KEY,
     print_date TEXT UNIQUE NOT NULL,
-    nyt_id INTEGER UNIQUE,
+    source_id INTEGER UNIQUE,
     difficulty INTEGER
 ) STRICT;
 
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY,
     puzzle_id INTEGER NOT NULL,
     difficulty INTEGER NOT NULL,
-    content TEXT NOT NULL,
+    title TEXT NOT NULL,
     hint_card_id INTEGER UNIQUE,
     FOREIGN KEY (puzzle_id) REFERENCES puzzles(id) ON DELETE CASCADE,
     FOREIGN KEY (hint_card_id) REFERENCES cards(id) ON DELETE CASCADE
