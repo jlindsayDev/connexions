@@ -78,35 +78,14 @@ export class Puzzle extends HTMLElement {
     this.render();
   }
 
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue === newValue) return;
-    this.render();
-  }
-
-  static get observedAttributes() {
-    return [];
-  }
-
-  get year() {
-    return this._year;
-  }
-
   set year(value) {
     this._year = value;
     this.setAttribute("year", String(value));
   }
 
-  get month() {
-    return this._month;
-  }
-
   set month(value) {
     this._month = value;
     this.setAttribute("month", String(value));
-  }
-
-  get day() {
-    return this._day;
   }
 
   set day(value) {
@@ -156,23 +135,6 @@ export class Puzzle extends HTMLElement {
       ?.addEventListener("submit", this.tryGuess);
   }
 
-  tryGuess(e) {
-    e.preventDefault();
-  }
-
-  tryToggle(e) {
-    const target = e.target;
-    if (target.name !== "cards") return;
-
-    const value = Number.parseInt(target.value, 10);
-
-    if (this._selected.delete(value)) {
-      target.checked = false;
-    } else {
-      target.checked = this._selected.size < 4 && !!this._selected.add(value);
-    }
-  }
-
   async initialize() {
     const gameState = await fetchFreshPuzzle(
       this._year,
@@ -200,6 +162,23 @@ export class Puzzle extends HTMLElement {
           ];
         }
       });
+  }
+
+  tryToggle(e) {
+    const target = e.target;
+    if (target.name !== "cards") return;
+
+    const value = Number.parseInt(target.value, 10);
+
+    if (this._selected.delete(value)) {
+      target.checked = false;
+    } else {
+      target.checked = this._selected.size < 4 && !!this._selected.add(value);
+    }
+  }
+
+  tryGuess(e) {
+    e.preventDefault();
   }
 }
 
