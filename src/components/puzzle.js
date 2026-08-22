@@ -97,13 +97,13 @@ export class Puzzle extends HTMLElement {
     if (!this.shadowRoot) return;
 
     const categoryToHtml = (category, i) => `
-      <div class="category-${category.difficulty}" data-key="${i}">
+      <div class="category-${category.difficulty}">
         <h4>${category.title}</h4>
         <h5>WORDS, WORDS, WORDS, WORDS</h5>
       </div>`;
 
     const cardToHtml = (card) => `
-      <label data-key="${card.id}">
+      <label>
         <input
           type="checkbox"
           name="cards"
