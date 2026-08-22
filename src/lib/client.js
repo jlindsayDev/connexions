@@ -1,4 +1,4 @@
-import { padNums } from "../lib/utils.js";
+import { padNums, parseResponseJson } from "../lib/utils.js";
 
 export const requestNotifications = async (e) => {
   const button = e.target;
@@ -15,5 +15,5 @@ export const fetchFreshPuzzle = async (year, month, day) => {
   const printDate = padNums(year, month + 1, day);
   const puzzleResponse = await fetch(`/puzzles/${printDate}`);
   const data = await puzzleResponse.json();
-  return data;
+  return parseResponseJson(data, false);
 };
