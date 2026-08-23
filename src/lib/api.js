@@ -1,4 +1,10 @@
-import { fromBase64, getNextDate, toBase64 } from "./utils.js";
+import {
+  formatPuzzles,
+  fromBase64,
+  getNextDate,
+  parseResponseJson,
+  toBase64,
+} from "./utils.js";
 
 export const fetchPuzzleFromSource = async (dateStr) => {
   const ENCODED_URL =
@@ -7,6 +13,24 @@ export const fetchPuzzleFromSource = async (dateStr) => {
   const response = await fetch(url);
   console.info(`HTTP GET [${response.status}] ${url}`);
   return await response.json();
+};
+
+export const fetchOrInsertPuzzle = async (db, dateStr) => {
+  let query = "SELECT * FROM puzzles WHERE print_date = ?";
+  const puzzles = (await db.prepare(query).bind(dateStr).run()).results;
+
+  if (!puzzles.length) {
+    const responseJson = await fetchPuzzleFromSource(dateStr);
+    return await insertPuzzles(db, [parseResponseJson(responseJson, false)]);
+  }
+
+  query = "SELECT * FROM categories WHERE puzzle_id = ?";
+  const categories = (await db.prepare(query).bind(puzzles[0].id).run())
+    .results;
+  query = `SELECT * FROM cards WHERE category_id IN (${categories.map((c) => c.id)})`;
+  const cards = (await db.prepare(query).run()).results;
+
+  return formatPuzzles(puzzles, categories, cards);
 };
 
 export const fetchPuzzlesFromSource = async (startDateStr, numDays) => {
@@ -57,9 +81,7 @@ export const insertPuzzles = async (db, puzzles) => {
     ["puzzle_id", "difficulty", "title"],
     puzzles.flatMap(({ source_id, categories }) => {
       const sourceId = Number.parseInt(source_id, 10);
-      const puzzle = d1Puzzles.results.find(
-        ({ source_id }) => sourceId === source_id,
-      );
+      const puzzle = d1Puzzles.find(({ source_id }) => sourceId === source_id);
       return categories.map((category, difficulty) => [
         puzzle.id,
         difficulty,
@@ -74,12 +96,12 @@ export const insertPuzzles = async (db, puzzles) => {
     ["category_id", "position", "content"],
     puzzles.flatMap(({ source_id, categories }) => {
       const sourceId = Number.parseInt(source_id, 10);
-      const d1Puzzle = d1Puzzles.results.find(
+      const d1Puzzle = d1Puzzles.find(
         ({ source_id }) => sourceId === source_id,
       );
 
       return categories.flatMap(({ difficulty, cards }) => {
-        const d1Category = d1Categories.results.find(
+        const d1Category = d1Categories.find(
           (c) => c.puzzle_id === d1Puzzle.id && c.difficulty === difficulty,
         );
 
@@ -92,7 +114,7 @@ export const insertPuzzles = async (db, puzzles) => {
     }),
   );
 
-  return { puzzles: d1Puzzles, categories: d1Categories, cards: d1Cards };
+  return formatPuzzles(d1Puzzles, d1Categories, d1Cards);
 };
 
 const executeD1 = async (sql, params = []) => {
@@ -119,10 +141,11 @@ const bulkInsert = async (db, table, columns, records) => {
     INSERT INTO ${table} (${columns.join(", ")})
     VALUES ${recordPlaceholders}
     RETURNING id, ${columns.join(", ")}`;
-  return await db
+  const response = await db
     .prepare(query)
     .bind(...records.flat())
     .run();
+  return response.results;
 };
 
 const batchInsert = async (db, table, columns, records) => {

@@ -12,5 +12,6 @@ export const requestNotifications = async (e) => {
 };
 
 export const fetchFreshPuzzle = async (year, month, day) => {
-  return await fetch(`/puzzles/${padNums(year, month + 1, day)}`);
+  const response = await fetch(`/puzzles/${padNums(year, month + 1, day)}`);
+  return await response.json();
 };

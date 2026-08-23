@@ -1,5 +1,6 @@
 import { fetchFreshPuzzle } from "../lib/client.js";
 import * as db from "../lib/db.js";
+import { fromBase64 } from "../lib/utils.js";
 
 const puzzleCss = `
   #puzzleContainer {
@@ -63,8 +64,8 @@ export class Puzzle extends HTMLElement {
   _day = 0;
 
   _gameState;
+  _guesses;
   _guessedCategories = [];
-  _categories = [];
   _cards = [];
   _selected = new Set();
 
@@ -75,7 +76,29 @@ export class Puzzle extends HTMLElement {
   }
 
   async connectedCallback() {
-    await this.initialize();
+    this._gameState = await fetchFreshPuzzle(
+      this._year,
+      this._month,
+      this._day,
+    );
+    this._guesses = await db.getGuesses(this._gameState);
+    this._cards = this._gameState.categories.flatMap(({ cards }) => cards);
+
+    this._guesses
+      .filter(({ category_id }) => category_id)
+      .forEach(({ category_id: guessCategoryId }) => {
+        const guessedCategory = this._gameState.categories.find(
+          ({ id }) => guessCategoryId === id,
+        );
+
+        if (guessedCategory) {
+          this._guessedCategories.push(guessedCategory);
+          this._cards = this._cards.filter(
+            ({ category_id: id }) => guessCategoryId !== id,
+          );
+        }
+      });
+
     this.render();
   }
 
@@ -101,8 +124,8 @@ export class Puzzle extends HTMLElement {
       .map(
         (category) => `
           <div class="category-${category.difficulty}">
-            <h4>${category.title}</h4>
-            <h5>${category.cards.map((c) => c.content).join(", ")}</h5>
+            <h4>${fromBase64(category.title)}</h4>
+            <h5>${category.cards.map(({ content }) => fromBase64(content)).join(", ")}</h5>
           </div>`,
       )
       .join("");
@@ -115,12 +138,12 @@ export class Puzzle extends HTMLElement {
             <input
               type="checkbox"
               name="cards"
-              value="${card.difficulty}"
+              value="${card.position}"
               data-position="${card.position}"
               data-difficulty="${card.difficulty}"
               ${this._selected.has(card.position) ? "checked" : ""}
             />
-            ${card.content}
+            ${fromBase64(card.content)}
           </label>`,
       )
       .join("");
@@ -139,34 +162,6 @@ export class Puzzle extends HTMLElement {
     this.shadowRoot
       .getElementById("form")
       ?.addEventListener("submit", this.tryGuess.bind(this));
-  }
-
-  async initialize() {
-    const gameState = await fetchFreshPuzzle(
-      this._year,
-      this._month,
-      this._day,
-    );
-    const guesses = await db.getGuesses(gameState.puzzle);
-
-    this._gameState = gameState;
-    this._categories = gameState.categories;
-    this._cards = gameState.categories.flatMap((c) => c.cards);
-
-    guesses
-      .filter(({ category_id }) => category_id)
-      .forEach(({ category_id: guessCategoryId }) => {
-        const guessedCategory = gameState.categories.find(
-          ({ id }) => guessCategoryId === id,
-        );
-
-        if (guessedCategory) {
-          this._guessedCategories.push(guessedCategory);
-          this._cards = this._cards.filter(
-            ({ category_id: id }) => guessCategoryId !== id,
-          );
-        }
-      });
   }
 
   tryToggle(e) {

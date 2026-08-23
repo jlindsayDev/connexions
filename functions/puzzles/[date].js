@@ -1,5 +1,4 @@
-import { fetchPuzzleFromSource, insertPuzzles } from "../../src/lib/api";
-import { parseResponseJson } from "../../src/lib/utils";
+import { fetchOrInsertPuzzle } from "../../src/lib/api";
 
 export const onRequestOptions = async (_context) => {
   return new Response(null, {
@@ -15,19 +14,8 @@ export const onRequestOptions = async (_context) => {
 
 export const onRequestGet = async (context) => {
   const { date } = context.params;
-  const selectQuery = "SELECT * FROM puzzles WHERE print_date = ?";
-  let puzzleResponse = await context.env.DB.prepare(selectQuery)
-    .bind(date)
-    .run();
-
-  if (!puzzleResponse.results.length) {
-    const sourceResponseJson = await fetchPuzzleFromSource(new Date(date));
-    puzzleResponse = await insertPuzzles(context.env.DB, [
-      parseResponseJson(sourceResponseJson),
-    ]);
-  }
-
-  const response = Response.json(puzzleResponse.results);
+  const puzzleResponse = await fetchOrInsertPuzzle(context.env.DB, date);
+  const response = Response.json(puzzleResponse[0]);
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set("Access-Control-Max-Age", "86400");
   return response;

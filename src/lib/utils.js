@@ -58,3 +58,29 @@ export const parseResponseJson = (json, encrypt = true) => {
     categories,
   };
 };
+
+export const formatPuzzles = (puzzles, categories, cards) => {
+  const indexedCategories = Map.groupBy(categories, (c) => c.puzzle_id);
+  const indexedCards = Map.groupBy(cards, (c) => c.category_id);
+
+  return puzzles.map((puzzle) => ({
+    id: puzzle.id,
+    printDate: puzzle.print_date,
+    sourceId: puzzle.source_id,
+
+    categories: indexedCategories.get(puzzle.id).map((category) => ({
+      id: category.id,
+      puzzleId: category.puzzle_id,
+      hintCardId: category.hint_card_id,
+      difficulty: category.difficulty,
+      title: category.title,
+
+      cards: indexedCards.get(category.id).map((card) => ({
+        id: card.id,
+        categoryId: card.category_id,
+        position: card.position,
+        content: card.content,
+      })),
+    })),
+  }));
+};
