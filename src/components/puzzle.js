@@ -59,15 +59,15 @@ const puzzleCss = `
 `;
 
 export class Puzzle extends HTMLElement {
-  _year = 0;
-  _month = 0;
-  _day = 0;
+  #year = 0;
+  #month = 0;
+  #day = 0;
 
-  _gameState;
-  _guesses;
-  _guessedCategories = [];
-  _cards = [];
-  _selected = new Set();
+  #gameState;
+  #guesses;
+  #guessedCategories = [];
+  #cards;
+  #selected = new Set();
 
   constructor() {
     super();
@@ -76,51 +76,48 @@ export class Puzzle extends HTMLElement {
   }
 
   async connectedCallback() {
-    this._gameState = await fetchFreshPuzzle(
-      this._year,
-      this._month,
-      this._day,
+    this.#gameState = await fetchFreshPuzzle(
+      this.#year,
+      this.#month,
+      this.#day,
     );
-    this._guesses = await db.getGuesses(this._gameState);
-    this._cards = this._gameState.categories.flatMap(({ cards }) => cards);
+    this.#guesses = await db.getGuesses(this.#gameState);
+    this.#cards = this.#gameState.categories.flatMap(({ cards }) => cards);
 
-    this._guesses
-      .filter(({ category_id }) => category_id)
-      .forEach(({ category_id: guessCategoryId }) => {
-        const guessedCategory = this._gameState.categories.find(
-          ({ id }) => guessCategoryId === id,
+    this.#guesses
+      .filter((guess) => guess.category_id)
+      .forEach((guess) => {
+        if (!guess.category_id) return;
+
+        const guessedCategory = this.#gameState.categories.find(
+          (category) => category.id === guess.category_id,
         );
-
-        if (guessedCategory) {
-          this._guessedCategories.push(guessedCategory);
-          this._cards = this._cards.filter(
-            ({ categoryId }) => guessCategoryId !== categoryId,
-          );
-        }
+        this.#guessedCategories.push(guessedCategory);
+        this.#cards = this.#cards.filter(
+          (card) => card.categoryId !== guess.category_id,
+        );
       });
 
     this.render();
   }
 
   set year(value) {
-    this._year = value;
+    this.#year = value;
     this.setAttribute("year", String(value));
   }
 
   set month(value) {
-    this._month = value;
+    this.#month = value;
     this.setAttribute("month", String(value));
   }
 
   set day(value) {
-    this._day = value;
+    this.#day = value;
     this.setAttribute("day", String(value));
   }
 
   render() {
-    if (!this.shadowRoot) return;
-
-    const categoriesHtml = this._guessedCategories
+    const categoriesHtml = this.#guessedCategories
       .map(
         (category) => `
           <div class="category-${category.difficulty}">
@@ -130,16 +127,16 @@ export class Puzzle extends HTMLElement {
       )
       .join("");
 
-    const cardsHtml = this._cards
+    const cardsHtml = this.#cards
       .toSorted(({ position: a }, { position: b }) => a - b)
       .map(
         (card) => `
-          <label id="${card.id}">
+          <label>
             <input
               type="checkbox"
               name="cards"
               value="${card.id}"
-              ${this._selected.has(card) ? "checked" : ""}
+              ${this.#selected.has(card) ? "checked" : ""}
             />
             ${fromBase64(card.content)}
           </label>`,
@@ -149,7 +146,7 @@ export class Puzzle extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${puzzleCss}</style>
       <div id="puzzleContainer">
-        <span>${this._gameState.printDate}</span>
+        <span>${this.#gameState.printDate}</span>
         <section id="categories">${categoriesHtml}</section>
         <form id="form">
           <section id="cards">${cardsHtml}</section>
@@ -167,50 +164,50 @@ export class Puzzle extends HTMLElement {
     const { target } = e;
     if (target.name !== "cards") return;
 
-    if (this._selected.delete(target)) {
+    if (this.#selected.delete(target)) {
       target.checked = false;
     } else {
-      target.checked = this._selected.size < 4 && !!this._selected.add(target);
+      target.checked = this.#selected.size < 4 && !!this.#selected.add(target);
     }
   }
 
   async tryGuess(e) {
     e.preventDefault();
     e.stopPropagation();
-    if (!this._gameState || this._selected.size !== 4) return;
+    if (!this.#gameState || this.#selected.size !== 4) return;
 
-    const selectedElements = Array.from(this._selected);
+    const selectedElements = Array.from(this.#selected);
     const guessStr = selectedElements
       .map(({ value }) => value)
       .sort()
       .join(",");
 
-    const alreadyGuessed = await db.getGuess(this._gameState, guessStr);
+    const alreadyGuessed = await db.getGuess(this.#gameState, guessStr);
     if (alreadyGuessed) {
-      console.debug(`Already tried guess: ${guessStr}`);
+      console.debug("ALREADY GUESSED");
       return;
     }
 
     const guessMap = Map.groupBy(selectedElements, ({ value }) => {
       const cardId = Number.parseInt(value, 10);
-      return this._cards.find(({ id }) => id === cardId).categoryId;
+      return this.#cards.find(({ id }) => id === cardId).categoryId;
     });
 
     if (guessMap.size === 1) {
       const categoryId = guessMap.keys().next().value;
-      const guessedCategory = this._gameState.categories.find(
+      const guessedCategory = this.#gameState.categories.find(
         ({ id }) => categoryId === id,
       );
       console.debug("CORRECT", guessedCategory);
 
-      this._guessedCategories.push(guessedCategory);
-      this._cards = this._cards.filter(
+      this.#guessedCategories.push(guessedCategory);
+      this.#cards = this.#cards.filter(
         ({ categoryId }) => guessedCategory.id !== categoryId,
       );
       selectedElements.map((el) => el.parentNode.remove());
-      this._selected.clear();
+      this.#selected.clear();
 
-      return await db.addGuess(this._gameState, guessStr, categoryId);
+      return await db.addGuess(this.#gameState, guessStr, categoryId);
     }
 
     if (guessMap.size === 2) {
@@ -221,12 +218,12 @@ export class Puzzle extends HTMLElement {
         console.debug("EVEN SPLIT");
       }
     } else if (guessMap.size === 4) {
-      console.debug("ALL WRONG! That's most impressive");
+      console.debug("ALL WRONG! That's quite impressive");
     } else {
       console.debug("JUST WRONG, yo");
     }
 
-    return await db.addGuess(this._gameState, guessStr);
+    return await db.addGuess(this.#gameState, guessStr);
   }
 }
 
