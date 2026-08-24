@@ -66,10 +66,32 @@ export class Puzzle extends HTMLElement {
   #guessedCategories = [];
   #selected = new Set();
 
+  #shadow;
+
   constructor() {
     super();
-    this.attachShadow({ mode: "open" });
-    this.shadowRoot.addEventListener("change", this.tryToggle.bind(this));
+    this.#shadow = this.attachShadow({ mode: "open" });
+
+    this.#shadow.innerHTML = `
+      <style>${puzzleCss}</style>
+      <div id="puzzleContainer">
+        <span id="date"></span>
+        <section id="categories"></section>
+        <form id="form">
+          <section id="cards"></section>
+          <input id="submit" type="submit" value="GUESS"/>
+          <input id="magic" type="submit" value="MAGIC"/>
+        </form>
+      </div>
+    `;
+
+    this.#shadow
+      .getElementById("cards")
+      .addEventListener("change", this.tryToggle.bind(this));
+
+    this.#shadow
+      .getElementById("form")
+      .addEventListener("submit", this.tryGuess.bind(this));
   }
 
   set date(value) {
@@ -77,7 +99,6 @@ export class Puzzle extends HTMLElement {
   }
 
   async connectedCallback() {
-    await this.initialize(this.#date);
     this.#gameState = await fetchFreshPuzzle(this.#date);
     this.#guesses = await db.getGuesses(this.#gameState);
     this.#cards = this.#gameState.categories.flatMap(({ cards }) => cards);
@@ -95,21 +116,30 @@ export class Puzzle extends HTMLElement {
         );
       });
 
-    this.render();
+    this.renderDate();
+    this.renderCategories();
+    this.renderCards();
   }
 
-  render() {
-    const categoriesHtml = this.#guessedCategories
-      .map(
-        (category) => `
+  renderDate() {
+    this.#shadow.getElementById("date").innerHTML = this.#gameState.printDate;
+  }
+
+  renderCategories() {
+    this.#shadow.getElementById("categories").innerHTML =
+      this.#guessedCategories
+        .map(
+          (category) => `
           <div class="category-${category.difficulty}">
             <h4>${fromBase64(category.title)}</h4>
             <h5>${category.cards.map(({ content }) => fromBase64(content)).join(", ")}</h5>
           </div>`,
-      )
-      .join("");
+        )
+        .join("");
+  }
 
-    const cardsHtml = this.#cards
+  renderCards() {
+    this.#shadow.getElementById("cards").innerHTML = this.#cards
       .toSorted(({ position: a }, { position: b }) => a - b)
       .map(
         (card) => `
@@ -124,22 +154,6 @@ export class Puzzle extends HTMLElement {
           </label>`,
       )
       .join("");
-
-    this.shadowRoot.innerHTML = `
-      <style>${puzzleCss}</style>
-      <div id="puzzleContainer">
-        <span>${this.#gameState.printDate}</span>
-        <section id="categories">${categoriesHtml}</section>
-        <form id="form">
-          <section id="cards">${cardsHtml}</section>
-          <input type="submit" value="GUESS"/>
-        </form>
-      </div>
-    `;
-
-    this.shadowRoot
-      .getElementById("form")
-      .addEventListener("submit", this.tryGuess.bind(this));
   }
 
   tryToggle(e) {
@@ -189,13 +203,15 @@ export class Puzzle extends HTMLElement {
       selectedElements.map((el) => el.parentNode.remove());
       this.#selected.clear();
 
+      this.renderCategories();
+      this.renderCards();
       return await db.addGuess(this.#gameState, guessStr, categoryId);
     }
 
     if (guessMap.size === 2) {
       const singleton = guessMap.values().find((v) => v.length === 1);
       if (singleton) {
-        console.debug("ONE AWAY", singleton.parentNode);
+        console.debug("ONE AWAY", singleton[0], singleton[0].parentNode);
       } else {
         console.debug("EVEN SPLIT");
       }
