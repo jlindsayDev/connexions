@@ -1,5 +1,3 @@
-import { padNums } from "../lib/utils.js";
-
 export const requestNotifications = async (e) => {
   const button = e.target;
 
@@ -11,7 +9,7 @@ export const requestNotifications = async (e) => {
   }
 };
 
-export const fetchFreshPuzzle = async (year, month, day) => {
-  const response = await fetch(`/puzzles/${padNums(year, month + 1, day)}`);
+export const fetchFreshPuzzle = async (date) => {
+  const response = await fetch(`/puzzles/${date}`);
   return await response.json();
 };

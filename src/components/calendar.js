@@ -1,3 +1,5 @@
+import { padNums } from "../lib/utils.js";
+
 const calendarCss = `
   #calendarContainer {
 
@@ -34,8 +36,8 @@ const calendarCss = `
 `;
 
 export class Calendar extends HTMLElement {
-  _year = 0;
-  _month = 0;
+  #year = 0;
+  #month = 0;
 
   constructor() {
     super();
@@ -44,55 +46,33 @@ export class Calendar extends HTMLElement {
 
   connectedCallback() {
     const d = new Date();
-    this._year = d.getFullYear();
-    this._month = d.getMonth();
-
+    this.#year = d.getFullYear();
+    this.#month = d.getMonth();
     this.render();
-  }
-
-  static get observedAttributes() {
-    return ["month", "year"];
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue === newValue) return;
-    if (name === "month") this._month = Number(newValue);
-    if (name === "year") this._year = Number(newValue);
-    this.render();
-  }
-
-  get month() {
-    return this._month;
   }
 
   set month(value) {
-    this._month = value;
-    this.setAttribute("month", String(value));
-  }
-
-  get year() {
-    return this._year;
+    this.#month = value;
   }
 
   set year(value) {
-    this._year = value;
-    this.setAttribute("year", String(value));
+    this.#year = value;
   }
 
   decrement = () => {
-    this._month--;
-    if (this._month < 0) {
-      this._month = 11;
-      this._year--;
+    this.#month--;
+    if (this.#month < 0) {
+      this.#month = 11;
+      this.#year--;
     }
     this.render();
   };
 
   increment = () => {
-    this._month++;
-    if (this._month > 11) {
-      this._month = 0;
-      this._year++;
+    this.#month++;
+    if (this.#month > 11) {
+      this.#month = 0;
+      this.#year++;
     }
     this.render();
   };
@@ -102,23 +82,16 @@ export class Calendar extends HTMLElement {
     if (target.classList.contains("day")) {
       const day = Number.parseInt(target.textContent || "0", 10);
       const puzzle = document.createElement("puzzle-component");
-      puzzle.year = this._year;
-      puzzle.month = this._month;
-      puzzle.day = day;
-
-      this.shadowRoot
-        .getElementById("puzzleContainer")
-        ?.replaceChildren(puzzle);
+      puzzle.date = padNums(this.#year, this.#month + 1, day);
+      this.shadowRoot.getElementById("puzzleContainer").replaceChildren(puzzle);
     }
   };
 
   render() {
-    if (!this.shadowRoot) return;
-
-    const firstDay = new Date(this._year, this._month, 1);
+    const firstDay = new Date(this.#year, this.#month, 1);
     const firstDayIndex = firstDay.getDay();
     const monthName = firstDay.toLocaleString("default", { month: "long" });
-    const daysInMonth = new Date(this._year, this._month + 1, 0).getDate();
+    const daysInMonth = new Date(this.#year, this.#month + 1, 0).getDate();
 
     const headers = ["Su", "M", "Tu", "W", "Th", "F", "Sa"]
       .map((day) => `<div class="dow">${day}</div>`)
@@ -137,7 +110,7 @@ export class Calendar extends HTMLElement {
       <div id="calendarContainer">
         <section id="nav">
           <button id="btn-prev">&larr;</button>
-          <span>${monthName} ${this._year}</span>
+          <span>${monthName} ${this.#year}</span>
           <button id="btn-next">&rarr;</button>
         </section>
 
@@ -152,13 +125,13 @@ export class Calendar extends HTMLElement {
 
     this.shadowRoot
       .getElementById("btn-prev")
-      ?.addEventListener("click", this.decrement);
+      .addEventListener("click", this.decrement);
     this.shadowRoot
       .getElementById("btn-next")
-      ?.addEventListener("click", this.increment);
+      .addEventListener("click", this.increment);
     this.shadowRoot
       .getElementById("calendar")
-      ?.addEventListener("click", this.handleSelect);
+      .addEventListener("click", this.handleSelect);
   }
 }
 

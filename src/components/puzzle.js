@@ -59,14 +59,11 @@ const puzzleCss = `
 `;
 
 export class Puzzle extends HTMLElement {
-  #year = 0;
-  #month = 0;
-  #day = 0;
-
+  #date;
   #gameState;
+  #cards;
   #guesses;
   #guessedCategories = [];
-  #cards;
   #selected = new Set();
 
   constructor() {
@@ -75,12 +72,13 @@ export class Puzzle extends HTMLElement {
     this.shadowRoot.addEventListener("change", this.tryToggle.bind(this));
   }
 
+  set date(value) {
+    this.#date = value;
+  }
+
   async connectedCallback() {
-    this.#gameState = await fetchFreshPuzzle(
-      this.#year,
-      this.#month,
-      this.#day,
-    );
+    await this.initialize(this.#date);
+    this.#gameState = await fetchFreshPuzzle(this.#date);
     this.#guesses = await db.getGuesses(this.#gameState);
     this.#cards = this.#gameState.categories.flatMap(({ cards }) => cards);
 
@@ -88,7 +86,6 @@ export class Puzzle extends HTMLElement {
       .filter((guess) => guess.category_id)
       .forEach((guess) => {
         if (!guess.category_id) return;
-
         const guessedCategory = this.#gameState.categories.find(
           (category) => category.id === guess.category_id,
         );
@@ -99,21 +96,6 @@ export class Puzzle extends HTMLElement {
       });
 
     this.render();
-  }
-
-  set year(value) {
-    this.#year = value;
-    this.setAttribute("year", String(value));
-  }
-
-  set month(value) {
-    this.#month = value;
-    this.setAttribute("month", String(value));
-  }
-
-  set day(value) {
-    this.#day = value;
-    this.setAttribute("day", String(value));
   }
 
   render() {
