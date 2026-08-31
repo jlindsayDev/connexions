@@ -3,6 +3,17 @@ import * as db from "../lib/db.js";
 import { fromBase64 } from "../lib/utils.js";
 
 const puzzleCss = `
+  :host {
+    --light-0: rgb(84, 146, 255);
+    --light-1: rgb(105, 227, 82);
+    --light-2: rgb(251, 212, 0);
+    --light-3: rgb(223, 123, 234);
+    --dark-0: rgb(27, 59, 112);
+    --dark-1: rgb(30, 126, 10);
+    --dark-2: rgb(123, 110, 34);
+    --dark-3: rgb(106, 8, 117);
+  }
+
   #puzzleContainer {
     display: flex;
     flex-direction: column;
@@ -44,17 +55,17 @@ const puzzleCss = `
   }
 
   @media (prefers-color-scheme: light) {
-    .category-0 { background-color: rgb(84, 146, 255); }
-    .category-1 { background-color: rgb(105, 227, 82); }
-    .category-2 { background-color: rgb(251, 212, 0); }
-    .category-3 { background-color: rgb(223, 123, 234); }
+    .category-0 { background-color: var(--light-0); }
+    .category-1 { background-color: var(--light-1); }
+    .category-2 { background-color: var(--light-2); }
+    .category-3 { background-color: var(--light-3); }
   }
 
   @media (prefers-color-scheme: dark) {
-    .category-0 { background-color: rgb(27, 59, 112); }
-    .category-1 { background-color: rgb(30, 126, 10); }
-    .category-2 { background-color: rgb(123, 110, 34); }
-    .category-3 { background-color: rgb(106, 8, 117); }
+    .category-0 { background-color: var(--dark-0); }
+    .category-1 { background-color: var(--dark-1); }
+    .category-2 { background-color: var(--dark-2); }
+    .category-3 { background-color: var(--dark-3); }
   }
 `;
 
