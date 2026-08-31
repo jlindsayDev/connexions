@@ -103,9 +103,7 @@ export const fetchGameState = async ({ puzzle_id, print_date }) => {
   }
 
   const puzzle = await toPromise(puzzleReq);
-  if (!puzzle) {
-    return null;
-  }
+  if (!puzzle) return null;
 
   const cards = await toPromise(
     tx.objectStore("cards").index("puzzle_id").getAll(puzzle.id),
@@ -143,9 +141,7 @@ export const addGameState = async ({ puzzle, cards, categories }) => {
     }),
   );
 
-  if (!isValid) {
-    return puzzle_id;
-  }
+  if (!isValid) return puzzle_id;
 
   const cardMapping = Map.groupBy(cards, ({ category_id }) => category_id);
 
@@ -213,6 +209,17 @@ export const getGuesses = async ({ id: puzzle_id }) => {
   return toPromise(
     tx.objectStore("guesses").index("puzzle_id").getAll(puzzle_id),
   );
+};
+
+export const clearGuesses = async ({ id: puzzle_id }) => {
+  const db = await getDB();
+  const tx = db.transaction("guesses", "readwrite");
+  const index = tx.objectStore("guesses").index("puzzle_id");
+  const guesses = await toPromise(index.getAll(puzzle_id));
+
+  for (const { id } of guesses) {
+    await toPromise(tx.objectStore("guesses").delete(id));
+  }
 };
 
 export const resetData = async () => {
@@ -283,9 +290,7 @@ export const upload = async (blob) => {
     db.objectStoreNames.contains(name),
   );
 
-  if (storeNames.length === 0) {
-    return;
-  }
+  if (storeNames.length === 0) return;
 
   const tx = db.transaction(storeNames, "readwrite");
   for (const storeName of storeNames) {

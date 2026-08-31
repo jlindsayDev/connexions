@@ -80,7 +80,7 @@ export class Puzzle extends HTMLElement {
         <form id="form">
           <section id="cards"></section>
           <input id="submit" type="submit" value="GUESS"/>
-          <input id="magic" type="submit" value="MAGIC"/>
+          <input id="reset" type="reset" value="RESET"/>
         </form>
       </div>
     `;
@@ -92,6 +92,10 @@ export class Puzzle extends HTMLElement {
     this.#shadow
       .getElementById("form")
       .addEventListener("submit", this.tryGuess.bind(this));
+
+    this.#shadow
+      .getElementById("form")
+      .addEventListener("reset", this.tryReset.bind(this));
   }
 
   set date(value) {
@@ -222,6 +226,22 @@ export class Puzzle extends HTMLElement {
     }
 
     return await db.addGuess(this.#gameState, guessStr);
+  }
+
+  async tryReset(e) {
+    e.preventDefault();
+
+    if (confirm("Retry this puzzle?")) {
+      await db.clearGuesses(this.#gameState);
+
+      this.#guessedCategories.length = 0;
+      this.#selected.length = 0;
+      this.#guesses = await db.getGuesses(this.#gameState);
+      this.#cards = this.#gameState.categories.flatMap(({ cards }) => cards);
+
+      this.renderCategories();
+      this.renderCards();
+    }
   }
 }
 
