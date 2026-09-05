@@ -59,6 +59,10 @@ const puzzleCss = `
     .category-1 { background-color: var(--light-1); }
     .category-2 { background-color: var(--light-2); }
     .category-3 { background-color: var(--light-3); }
+    .card-0 { border-color: var(--light-0); }
+    .card-1 { border-color: var(--light-1); }
+    .card-2 { border-color: var(--light-2); }
+    .card-3 { border-color: var(--light-3); }
   }
 
   @media (prefers-color-scheme: dark) {
@@ -66,6 +70,10 @@ const puzzleCss = `
     .category-1 { background-color: var(--dark-1); }
     .category-2 { background-color: var(--dark-2); }
     .category-3 { background-color: var(--dark-3); }
+    .card-0 { border-color: var(--dark-0); }
+    .card-1 { border-color: var(--dark-1); }
+    .card-2 { border-color: var(--dark-2); }
+    .card-3 { border-color: var(--dark-3); }
   }
 `;
 
