@@ -45,9 +45,11 @@ export class Calendar extends HTMLElement {
   }
 
   connectedCallback() {
-    const d = new Date();
-    this.#year = d.getFullYear();
-    this.#month = d.getMonth();
+    if (!this.#year || !this.#month) {
+      const d = new Date();
+      this.#year = d.getFullYear();
+      this.#month = d.getMonth();
+    }
     this.render();
   }
 
