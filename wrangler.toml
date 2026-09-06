@@ -1,12 +1,17 @@
-"$schema" = "./node_modules/wrangler/config-schema.json"
-
 name = "connexions"
 pages_build_output_dir = "src"
-compatibility_date = "2026-07-25"
+compatibility_date = "2026-09-05"
 
-[observability]
+[observability.logs]
 enabled = true
 head_sampling_rate = 1
+invocation_logs = true
+persist = true
+
+[observability.traces]
+enabled = false
+head_sampling_rate = 1
+persist = true
 
 [[d1_databases]]
 binding = "DB"
